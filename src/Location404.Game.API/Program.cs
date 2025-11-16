@@ -18,11 +18,11 @@ if (redisSettings?.Enabled == true)
     builder.Services.AddHostedService<RoundTimerExpirationListener>();
 }
 
-var redisConnection = builder.Configuration["Redis:ConnectionString"];
+var redisConnection = builder.Configuration["Redis:ConnectionString"] ?? "localhost:6379";
 builder.Services.AddSignalR()
     .AddStackExchangeRedis(redisConnection, options =>
     {
-        options.Configuration.ChannelPrefix = "SignalR";
+        options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("SignalR");
     });
 
 builder.Services.AddOpenTelemetryObservability(builder.Configuration, options =>
