@@ -72,13 +72,14 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IGameMatchManager, RedisGameMatchManager>();
             services.AddSingleton<IPlayerConnectionManager, PlayerConnectionManager>();
             services.AddSingleton<IGuessStorageManager, GuessStorageManager>();
+            services.AddSingleton<IRoundTimerService, RedisRoundTimerService>();
         }
         else
         {
-            // Use in-memory implementations for development
             services.AddSingleton<IGameMatchManager, InMemoryGameMatchManager>();
             services.AddSingleton<IPlayerConnectionManager, InMemoryPlayerConnectionManager>();
             services.AddSingleton<IGuessStorageManager, InMemoryGuessStorageManager>();
+            services.AddSingleton<IRoundTimerService, InMemoryRoundTimerService>();
         }
 
         return services;

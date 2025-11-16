@@ -35,7 +35,7 @@ public class GameRound
         return gameRound;
     }
 
-    public void EndGameRound(Coordinate gameResponse, Coordinate playerAGuess, Coordinate playerBGuess)
+    public void EndGameRound(Coordinate gameResponse, Coordinate? playerAGuess, Coordinate? playerBGuess)
     {
         GameResponse = gameResponse;
         PlayerAGuess = playerAGuess;
@@ -46,12 +46,14 @@ public class GameRound
         GameRoundEnded = true;
     }
 
-    private int CalculatePoints(Coordinate playerGuess)
+    private int CalculatePoints(Coordinate? playerGuess)
     {
         if (GameResponse == null)
             throw new InvalidOperationException("Game response is not set.");
 
-        // Distance is in kilometers (calculated using Haversine formula)
+        if (playerGuess == null)
+            return 0;
+
         var distanceKm = GameResponse.CalculateDistance(playerGuess);
 
         // GeoGuessr-style exponential decay scoring

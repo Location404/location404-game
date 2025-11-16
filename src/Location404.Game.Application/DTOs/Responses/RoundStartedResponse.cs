@@ -5,7 +5,9 @@ public record RoundStartedResponse(
     Guid RoundId,
     int RoundNumber,
     DateTime StartTime,
-    LocationData Location
+    LocationData Location,
+    DateTimeOffset StartedAt,
+    int DurationSeconds
 );
 
 /// <summary>

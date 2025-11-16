@@ -1,4 +1,5 @@
 using Location404.Game.API.Hubs;
+using Location404.Game.API.BackgroundServices;
 using Location404.Game.Infrastructure.Extensions;
 using Shared.Observability.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -10,6 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+var redisSettings = builder.Configuration.GetSection("Redis").Get<Location404.Game.Infrastructure.Configuration.RedisSettings>();
+if (redisSettings?.Enabled == true)
+{
+    builder.Services.AddHostedService<RoundTimerExpirationListener>();
+}
 
 var redisConnection = builder.Configuration["Redis:ConnectionString"];
 builder.Services.AddSignalR()

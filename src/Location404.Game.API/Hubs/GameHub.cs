@@ -18,6 +18,7 @@ public class GameHub(
     IGuessStorageManager guessStorage,
     IPlayerConnectionManager connectionManager,
     IGeoDataClient geoDataClient,
+    IRoundTimerService roundTimer,
     ActivitySource activitySource,
     ObservabilityMetrics metrics,
     ILogger<GameHub> logger) : Hub
@@ -28,6 +29,7 @@ public class GameHub(
     private readonly IGuessStorageManager _guessStorage = guessStorage;
     private readonly IPlayerConnectionManager _connectionManager = connectionManager;
     private readonly IGeoDataClient _geoDataClient = geoDataClient;
+    private readonly IRoundTimerService _roundTimer = roundTimer;
     private readonly ActivitySource _activitySource = activitySource;
     private readonly ObservabilityMetrics _metrics = metrics;
     private readonly ILogger<GameHub> _logger = logger;
@@ -211,12 +213,17 @@ public class GameHub(
                 location.ToCoordinate()
             );
 
+            var startedAt = DateTimeOffset.UtcNow;
+            var durationSeconds = 90;
+
             var response = new RoundStartedResponse(
                 match.Id,
                 match.CurrentGameRound!.Id,
                 match.CurrentGameRound.RoundNumber,
                 DateTime.UtcNow,
-                location
+                location,
+                startedAt,
+                durationSeconds
             );
 
             _logger.LogInformation("Round {RoundNumber} started for match {MatchId} at location ({X}, {Y})",
@@ -224,6 +231,8 @@ public class GameHub(
 
             await Clients.Group(match.Id.ToString())
                 .SendAsync("RoundStarted", response);
+
+            await _roundTimer.StartTimerAsync(match.Id, match.CurrentGameRound!.Id, TimeSpan.FromSeconds(durationSeconds));
         }
         catch (Exception ex)
         {
@@ -282,8 +291,45 @@ public class GameHub(
                 match.PlayerBId
             );
 
+            var isFirstGuess = (playerAGuess != null && playerBGuess == null) || (playerAGuess == null && playerBGuess != null);
+
+            if (isFirstGuess)
+            {
+                var remainingTime = await _roundTimer.GetRemainingTimeAsync(request.MatchId, currentRoundId);
+
+                if (remainingTime.HasValue && remainingTime.Value.TotalSeconds > 15)
+                {
+                    _logger.LogInformation("⏱️ [GameHub] Primeiro palpite detectado. Ajustando timer de {Current}s para 15s",
+                        remainingTime.Value.TotalSeconds);
+
+                    await _roundTimer.AdjustTimerAsync(request.MatchId, currentRoundId, TimeSpan.FromSeconds(15));
+
+                    await Clients.Group(match.Id.ToString()).SendAsync("TimerAdjusted", new
+                    {
+                        matchId = request.MatchId,
+                        roundId = currentRoundId,
+                        newDuration = 15,
+                        adjustedAt = DateTimeOffset.UtcNow
+                    });
+                }
+                else if (remainingTime.HasValue)
+                {
+                    _logger.LogInformation("⏱️ [GameHub] Primeiro palpite detectado, mas timer já está em {Current}s (≤15s). Mantendo tempo atual.",
+                        remainingTime.Value.TotalSeconds);
+                }
+
+                var opponentId = request.PlayerId == match.PlayerAId ? match.PlayerBId : match.PlayerAId;
+                await Clients.Group(match.Id.ToString()).SendAsync("OpponentSubmitted", new
+                {
+                    playerId = request.PlayerId,
+                    opponentId = opponentId
+                });
+            }
+
             if (playerAGuess != null && playerBGuess != null)
             {
+                await _roundTimer.CancelTimerAsync(request.MatchId, currentRoundId);
+
                 _logger.LogInformation("✅ [GameHub] Ambos jogadores enviaram palpites para match {MatchId}. Finalizando rodada...",
                     request.MatchId);
                 _logger.LogInformation("📍 [GameHub] PlayerA Guess: X={PlayerAX} (Lat), Y={PlayerAY} (Lng)",

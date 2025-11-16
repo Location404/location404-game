@@ -116,7 +116,7 @@ public class GameMatch
         CurrentGameRound = GameRound.StartGameRound(Id, TotalRounds + 1, PlayerAId, PlayerBId);
     }
 
-    public void EndCurrentGameRound(Coordinate gameResponse, Coordinate playerAGuess, Coordinate playerBGuess)
+    public void EndCurrentGameRound(Coordinate gameResponse, Coordinate? playerAGuess, Coordinate? playerBGuess)
     {
         if (CurrentGameRound == null)
             throw new InvalidOperationException("No current game round to end.");
