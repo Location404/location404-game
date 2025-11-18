@@ -1,4 +1,5 @@
 using Location404.Game.Domain.Entities;
+using Location404.Game.Application.Features.GameRounds.Commands;
 
 namespace Location404.Game.Application.DTOs.Responses;
 
@@ -33,6 +34,29 @@ public record RoundEndedResponse(
             playerATotalPoints,
             playerBTotalPoints,
             round.PlayerWinner()
+        );
+    }
+
+    public static RoundEndedResponse FromRoundEndResult(RoundEndResult result)
+    {
+        var winnerId = result.PlayerA.Points > result.PlayerB.Points
+            ? result.PlayerA.PlayerId
+            : result.PlayerB.Points > result.PlayerA.Points
+            ? result.PlayerB.PlayerId
+            : (Guid?)null;
+
+        return new RoundEndedResponse(
+            Guid.Empty,
+            result.RoundId,
+            result.RoundNumber,
+            CoordinateDto.FromEntity(result.CorrectLocation),
+            CoordinateDto.FromEntity(result.PlayerA.Guess),
+            CoordinateDto.FromEntity(result.PlayerB.Guess),
+            result.PlayerA.Points,
+            result.PlayerB.Points,
+            result.PlayerATotalPoints,
+            result.PlayerBTotalPoints,
+            winnerId
         );
     }
 }
