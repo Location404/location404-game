@@ -1,5 +1,7 @@
 using FluentAssertions;
+using LiteBus.Commands.Abstractions;
 using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Common.Result;
 using Location404.Game.Application.Events;
 using Location404.Game.Application.Features.GameRounds.Commands;
 using Location404.Game.Application.Services;
@@ -11,35 +13,26 @@ namespace Location404.Game.Application.UnitTests.Features.GameRounds.Commands;
 
 public class SubmitGuessCommandHandlerTests
 {
-    private readonly IMatchRepository _matchRepository;
-    private readonly IGuessRepository _guessRepository;
     private readonly IGameMatchManager _matchManager;
     private readonly IGuessStorageManager _guessStorage;
     private readonly IRoundTimerService _roundTimer;
-    private readonly IGameEventPublisher _eventPublisher;
-    private readonly IGeoDataClient _geoDataClient;
+    private readonly ICommandHandler<EndRoundCommand, Result<EndRoundResponse>> _endRoundHandler;
     private readonly ILogger<SubmitGuessCommandHandler> _logger;
     private readonly SubmitGuessCommandHandler _handler;
 
     public SubmitGuessCommandHandlerTests()
     {
-        _matchRepository = Substitute.For<IMatchRepository>();
-        _guessRepository = Substitute.For<IGuessRepository>();
         _matchManager = Substitute.For<IGameMatchManager>();
         _guessStorage = Substitute.For<IGuessStorageManager>();
         _roundTimer = Substitute.For<IRoundTimerService>();
-        _eventPublisher = Substitute.For<IGameEventPublisher>();
-        _geoDataClient = Substitute.For<IGeoDataClient>();
+        _endRoundHandler = Substitute.For<ICommandHandler<EndRoundCommand, Result<EndRoundResponse>>>();
         _logger = Substitute.For<ILogger<SubmitGuessCommandHandler>>();
 
         _handler = new SubmitGuessCommandHandler(
-            _matchRepository,
-            _guessRepository,
             _matchManager,
             _guessStorage,
             _roundTimer,
-            _eventPublisher,
-            _geoDataClient,
+            _endRoundHandler,
             _logger
         );
     }
@@ -150,11 +143,25 @@ public class SubmitGuessCommandHandlerTests
             Guess: playerBGuess
         );
 
+        var endRoundResponse = new EndRoundResponse(
+            RoundEnded: true,
+            MatchEnded: false,
+            RoundResult: new RoundEndResult(
+                RoundId: roundId,
+                RoundNumber: 1,
+                CorrectLocation: correctLocation,
+                PlayerA: new PlayerGuessResult(playerAId, playerAGuess, 5000, 0.5),
+                PlayerB: new PlayerGuessResult(playerBId, playerBGuess, 5000, 0.5),
+                PlayerATotalPoints: 5000,
+                PlayerBTotalPoints: 5000
+            )
+        );
+
         _matchManager.GetMatchAsync(match.Id).Returns(match);
         _guessStorage.GetBothGuessesAsync(match.Id, roundId, playerAId, playerBId)
             .Returns((playerAGuess, playerBGuess));
-        _guessStorage.GetCorrectAnswerAsync(match.Id, roundId)
-            .Returns(correctLocation);
+        _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<EndRoundResponse>.Success(endRoundResponse));
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -168,9 +175,15 @@ public class SubmitGuessCommandHandlerTests
         result.Value.RoundResult.PlayerA.PlayerId.Should().Be(playerAId);
         result.Value.RoundResult.PlayerB.PlayerId.Should().Be(playerBId);
 
-        await _roundTimer.Received(1).CancelTimerAsync(match.Id, roundId);
-        await _guessStorage.Received(1).ClearGuessesAsync(match.Id, roundId);
-        await _matchManager.Received(1).UpdateMatchAsync(Arg.Is<GameMatch>(m => m.GameRounds!.Count == 1));
+        await _endRoundHandler.Received(1).HandleAsync(
+            Arg.Is<EndRoundCommand>(c =>
+                c.MatchId == match.Id &&
+                c.RoundId == roundId &&
+                c.PlayerAGuess == playerAGuess &&
+                c.PlayerBGuess == playerBGuess
+            ),
+            Arg.Any<CancellationToken>()
+        );
     }
 
     [Fact]
@@ -211,11 +224,31 @@ public class SubmitGuessCommandHandlerTests
             Guess: finalPlayerBGuess
         );
 
+        var endRoundResponse = new EndRoundResponse(
+            RoundEnded: true,
+            MatchEnded: true,
+            RoundResult: new RoundEndResult(
+                RoundId: finalRoundId,
+                RoundNumber: 4,
+                CorrectLocation: locations[2],
+                PlayerA: new PlayerGuessResult(playerAId, finalPlayerAGuess, 5000, 0.5),
+                PlayerB: new PlayerGuessResult(playerBId, finalPlayerBGuess, 5000, 0.5),
+                PlayerATotalPoints: 20000,
+                PlayerBTotalPoints: 20000
+            ),
+            MatchResult: new MatchEndResult(
+                MatchId: match.Id,
+                WinnerId: Guid.Empty,
+                PlayerAFinalPoints: 20000,
+                PlayerBFinalPoints: 20000
+            )
+        );
+
         _matchManager.GetMatchAsync(match.Id).Returns(match);
         _guessStorage.GetBothGuessesAsync(match.Id, finalRoundId, playerAId, playerBId)
             .Returns((finalPlayerAGuess, finalPlayerBGuess));
-        _guessStorage.GetCorrectAnswerAsync(match.Id, finalRoundId)
-            .Returns(locations[2]);
+        _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<EndRoundResponse>.Success(endRoundResponse));
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -228,19 +261,17 @@ public class SubmitGuessCommandHandlerTests
         result.Value.MatchResult.Should().NotBeNull();
         result.Value.MatchResult!.MatchId.Should().Be(match.Id);
 
-        await _eventPublisher.Received(1).PublishMatchEndedAsync(Arg.Any<GameMatchEndedEvent>());
-        await _matchManager.Received(1).RemoveMatchAsync(match.Id);
+        await _endRoundHandler.Received(1).HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task HandleAsync_WhenCorrectAnswerNotFound_ShouldReturnNotFoundError()
+    public async Task HandleAsync_WhenEndRoundFails_ShouldReturnFailureError()
     {
         // Arrange
         var playerAId = Guid.NewGuid();
         var playerBId = Guid.NewGuid();
 
         var match = GameMatch.StartGameMatch(playerAId, playerBId);
-        var location = new Coordinate(-23.550520, -46.633308);
         match.StartNewGameRound();
         var roundId = match.CurrentGameRound!.Id;
 
@@ -256,8 +287,9 @@ public class SubmitGuessCommandHandlerTests
         _matchManager.GetMatchAsync(match.Id).Returns(match);
         _guessStorage.GetBothGuessesAsync(match.Id, roundId, playerAId, playerBId)
             .Returns((playerAGuess, playerBGuess));
-        _guessStorage.GetCorrectAnswerAsync(match.Id, roundId)
-            .Returns(Task.FromResult<Coordinate?>(null));
+        _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result<EndRoundResponse>.Failure(
+                new Error("Round.AnswerNotFound", "Round data corrupted.", Common.Result.ErrorType.NotFound)));
 
         // Act
         var result = await _handler.HandleAsync(command);
