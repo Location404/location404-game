@@ -12,13 +12,24 @@ public class InMemoryMatchmakingService : IMatchmakingService
     private readonly IGameMatchManager _matchManager;
     private readonly SemaphoreSlim _matchmakingLock = new(1, 1);
 
-    // Queue sorted by timestamp (playerId, timestamp)
+    // Queue sorted by timestamp, with PlayerId as tiebreaker for uniqueness
     private readonly SortedSet<(Guid PlayerId, long Timestamp)> _queue = new(
-        Comparer<(Guid, long)>.Create((a, b) => a.Item2.CompareTo(b.Item2))
+        Comparer<(Guid, long)>.Create((a, b) =>
+        {
+            var timestampComparison = a.Item2.CompareTo(b.Item2);
+            if (timestampComparison != 0)
+                return timestampComparison;
+
+            // If timestamps are equal, use PlayerId as tiebreaker to ensure uniqueness
+            return a.Item1.CompareTo(b.Item1);
+        })
     );
 
     // Set for fast lookup
     private readonly ConcurrentDictionary<Guid, long> _playerTimestamps = new();
+
+    // Counter to guarantee uniqueness when timestamps collide
+    private long _timestampCounter = 0;
 
     public InMemoryMatchmakingService(IGameMatchManager matchManager)
     {
@@ -33,11 +44,13 @@ public class InMemoryMatchmakingService : IMatchmakingService
         if (await IsPlayerInQueueAsync(playerId))
             throw new InvalidOperationException("Player is already in queue.");
 
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
         await _matchmakingLock.WaitAsync();
         try
         {
+            // Use high-resolution timestamp with counter to guarantee FIFO order
+            var baseTimestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            var timestamp = baseTimestamp * 1000 + Interlocked.Increment(ref _timestampCounter) % 1000;
+
             _queue.Add((playerId, timestamp));
             _playerTimestamps[playerId] = timestamp;
         }

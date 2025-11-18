@@ -1,4 +1,5 @@
 using Location404.Game.Domain.Entities;
+using Location404.Game.Application.Features.GameRounds.Commands;
 
 namespace Location404.Game.Application.DTOs.Responses;
 
@@ -28,6 +29,23 @@ public record MatchEndedResponse(
             match.PointsLost,
             match.EndTime,
             match.GameRounds.Select(GameRoundDto.FromEntity).ToList()
+        );
+    }
+
+    public static MatchEndedResponse FromMatchEndResult(MatchEndResult result)
+    {
+        var loserId = result.WinnerId != Guid.Empty ? (Guid?)result.WinnerId : null;
+
+        return new MatchEndedResponse(
+            result.MatchId,
+            result.WinnerId != Guid.Empty ? result.WinnerId : null,
+            loserId,
+            result.PlayerAFinalPoints,
+            result.PlayerBFinalPoints,
+            null,
+            null,
+            DateTime.UtcNow,
+            new List<GameRoundDto>()
         );
     }
 }
