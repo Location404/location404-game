@@ -22,7 +22,6 @@ public class GameHub(
     ICommandHandler<SubmitGuessCommand, Result<SubmitGuessResponse>> submitGuessHandler,
     IGameMatchManager matchManager,
     IMatchmakingService matchmaking,
-    IGameEventPublisher eventPublisher,
     IPlayerConnectionManager connectionManager,
     ActivitySource activitySource,
     ObservabilityMetrics metrics,
@@ -35,7 +34,6 @@ public class GameHub(
     private readonly ICommandHandler<SubmitGuessCommand, Result<SubmitGuessResponse>> _submitGuessHandler = submitGuessHandler;
     private readonly IGameMatchManager _matchManager = matchManager;
     private readonly IMatchmakingService _matchmaking = matchmaking;
-    private readonly IGameEventPublisher _eventPublisher = eventPublisher;
     private readonly IPlayerConnectionManager _connectionManager = connectionManager;
     private readonly ActivitySource _activitySource = activitySource;
     private readonly ObservabilityMetrics _metrics = metrics;
@@ -205,95 +203,7 @@ public class GameHub(
 
     #endregion
 
-    #region Legacy Methods (To be refactored or deprecated)
-
-    public async Task EndRound(EndRoundRequest request)
-    {
-        try
-        {
-            _logger.LogInformation("Ending round for match {MatchId}", request.MatchId);
-
-            var match = await _matchManager.GetMatchAsync(request.MatchId);
-
-            if (match == null)
-            {
-                _logger.LogWarning("Match {MatchId} not found when ending round", request.MatchId);
-                await Clients.Caller.SendAsync("Error", "Match not found.");
-                return;
-            }
-
-            if (match.CurrentGameRound == null)
-            {
-                _logger.LogWarning("No active round for match {MatchId}", request.MatchId);
-                await Clients.Caller.SendAsync("Error", "No active round to end.");
-                return;
-            }
-
-            var gameResponse = request.GetGameResponse();
-            var playerAGuess = request.GetPlayerAGuess();
-            var playerBGuess = request.GetPlayerBGuess();
-
-            match.EndCurrentGameRound(gameResponse, playerAGuess, playerBGuess);
-            await _matchManager.UpdateMatchAsync(match);
-
-            if (match.GameRounds == null || !match.GameRounds.Any())
-                throw new InvalidOperationException("Match must have rounds after ending a round.");
-
-            var roundEndedResponse = RoundEndedResponse.FromGameRound(
-                match.GameRounds.Last(),
-                match.PlayerATotalPoints,
-                match.PlayerBTotalPoints
-            );
-
-            await Clients.Group(match.Id.ToString()).SendAsync("RoundEnded", roundEndedResponse);
-
-            _logger.LogInformation("Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
-                match.GameRounds.Count, request.MatchId, match.PlayerATotalPoints, match.PlayerBTotalPoints);
-
-            try
-            {
-                var roundEvent = GameRoundEndedEvent.FromGameRound(match.GameRounds.Last());
-                await _eventPublisher.PublishRoundEndedAsync(roundEvent);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to publish RoundEnded event for match {MatchId}. Continuing anyway.", request.MatchId);
-            }
-
-            if (!match.CanStartNewRound())
-            {
-                _logger.LogInformation("Match {MatchId} is complete. Ending match.", request.MatchId);
-
-                match.EndGameMatch();
-                await _matchManager.UpdateMatchAsync(match);
-
-                var matchEndedResponse = MatchEndedResponse.FromGameMatch(match);
-
-                await Clients.Group(match.Id.ToString())
-                    .SendAsync("MatchEnded", matchEndedResponse);
-
-                _logger.LogInformation("Match {MatchId} ended. Winner: {WinnerId}",
-                    request.MatchId, match.PlayerWinnerId);
-
-                try
-                {
-                    var matchEvent = GameMatchEndedEvent.FromGameMatch(match);
-                    await _eventPublisher.PublishMatchEndedAsync(matchEvent);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to publish MatchEnded event for match {MatchId}. Match data may not be persisted.", request.MatchId);
-                }
-
-                await _matchManager.RemoveMatchAsync(match.Id);
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error ending round for match {MatchId}", request.MatchId);
-            await Clients.Caller.SendAsync("Error", $"Error ending round: {ex.Message}");
-        }
-    }
+    #region Utility Methods
 
     public async Task GetMatchStatus(Guid matchId)
     {
