@@ -12,7 +12,9 @@ using Microsoft.AspNetCore.SignalR;
 using Location404.Game.API.Hubs;
 using Location404.Game.Application.Services;
 using Location404.Game.Application.DTOs.Responses;
-using Location404.Game.Application.Events;
+using Location404.Game.Application.Features.GameRounds.Commands;
+using Location404.Game.Application.Common.Result;
+using LiteBus.Commands.Abstractions;
 
 public class RoundTimerExpirationListener : BackgroundService
 {
@@ -92,8 +94,7 @@ public class RoundTimerExpirationListener : BackgroundService
 
         var matchManager = scope.ServiceProvider.GetRequiredService<IGameMatchManager>();
         var guessStorage = scope.ServiceProvider.GetRequiredService<IGuessStorageManager>();
-        var eventPublisher = scope.ServiceProvider.GetRequiredService<IGameEventPublisher>();
-        var geoDataClient = scope.ServiceProvider.GetRequiredService<IGeoDataClient>();
+        var endRoundHandler = scope.ServiceProvider.GetRequiredService<ICommandHandler<EndRoundCommand, Result<EndRoundResponse>>>();
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<GameHub>>();
 
         try
@@ -137,81 +138,39 @@ public class RoundTimerExpirationListener : BackgroundService
                 playerAGuess == null ? "NULL" : "SUBMITTED",
                 playerBGuess == null ? "NULL" : "SUBMITTED");
 
-            match.EndCurrentGameRound(gameResponse, playerAGuess, playerBGuess);
-            await matchManager.UpdateMatchAsync(match);
-
-            await guessStorage.ClearGuessesAsync(matchId, roundId);
-
-            if (match.GameRounds == null || !match.GameRounds.Any())
-                throw new InvalidOperationException("Match must have rounds after ending a round.");
-
-            var roundEndedResponse = RoundEndedResponse.FromGameRound(
-                match.GameRounds.Last(),
-                match.PlayerATotalPoints,
-                match.PlayerBTotalPoints
+            var endRoundCommand = new EndRoundCommand(
+                MatchId: matchId,
+                RoundId: roundId,
+                PlayerAGuess: playerAGuess ?? gameResponse,
+                PlayerBGuess: playerBGuess ?? gameResponse
             );
 
-            await hubContext.Clients.Group(match.Id.ToString()).SendAsync("RoundEnded", roundEndedResponse);
+            var result = await endRoundHandler.HandleAsync(endRoundCommand);
 
-            _logger.LogInformation("⏱️ [ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
-                match.GameRounds.Count, matchId, match.PlayerATotalPoints, match.PlayerBTotalPoints);
-
-            try
+            if (result.IsFailure)
             {
-                var roundEvent = GameRoundEndedEvent.FromGameRound(match.GameRounds.Last());
-                await eventPublisher.PublishRoundEndedAsync(roundEvent);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "⏱️ [ForceRoundEnd] Failed to publish RoundEnded event for match {MatchId}", matchId);
+                _logger.LogError("⏱️ [ForceRoundEnd] Failed to end round: {Error}", result.Error.Message);
+                return;
             }
 
-            if (!match.CanStartNewRound())
+            if (result.Value.RoundEnded && result.Value.RoundResult != null)
             {
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Match {MatchId} is complete. Ending match.", matchId);
+                var roundEndedResponse = RoundEndedResponse.FromRoundEndResult(result.Value.RoundResult);
+                await hubContext.Clients.Group(matchId.ToString()).SendAsync("RoundEnded", roundEndedResponse);
 
-                match.EndGameMatch();
-                await matchManager.UpdateMatchAsync(match);
+                _logger.LogInformation("⏱️ [ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
+                    result.Value.RoundResult.RoundNumber, matchId,
+                    result.Value.RoundResult.PlayerATotalPoints,
+                    result.Value.RoundResult.PlayerBTotalPoints);
+            }
 
-                var matchEndedResponse = MatchEndedResponse.FromGameMatch(match);
-
-                await hubContext.Clients.Group(match.Id.ToString())
-                    .SendAsync("MatchEnded", matchEndedResponse);
+            if (result.Value.MatchEnded && result.Value.MatchResult != null)
+            {
+                var matchEndedResponse = MatchEndedResponse.FromMatchEndResult(result.Value.MatchResult);
+                await hubContext.Clients.Group(matchId.ToString()).SendAsync("MatchEnded", matchEndedResponse);
 
                 _logger.LogInformation("⏱️ [ForceRoundEnd] Match {MatchId} ended. Winner: {WinnerId}",
-                    matchId, match.PlayerWinnerId);
-
-                var matchEvent = GameMatchEndedEvent.FromGameMatch(match);
-
-                try
-                {
-                    await eventPublisher.PublishMatchEndedAsync(matchEvent);
-                    _logger.LogInformation("⏱️ [ForceRoundEnd] Match ended event published for match {MatchId}", matchId);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "⏱️ [ForceRoundEnd] Failed to publish MatchEnded event to RabbitMQ. Trying HTTP fallback...");
-
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            var success = await geoDataClient.SendMatchEndedAsync(matchEvent);
-                            if (!success)
-                            {
-                                _logger.LogError("⏱️ [ForceRoundEnd] HTTP fallback also failed for match {MatchId}", matchId);
-                            }
-                        }
-                        catch (Exception httpEx)
-                        {
-                            _logger.LogError(httpEx, "⏱️ [ForceRoundEnd] HTTP fallback threw exception for match {MatchId}", matchId);
-                        }
-                    });
-                }
-
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Removing match {MatchId} from cache...", match.Id);
-                await matchManager.RemoveMatchAsync(match.Id);
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Match {MatchId} removed successfully from cache", match.Id);
+                    matchId, result.Value.MatchResult.WinnerId);
             }
         }
         catch (Exception ex)
