@@ -1,6 +1,6 @@
 using Location404.Game.Domain.Entities;
 
-namespace Location404.Game.Application.Services;
+namespace Location404.Game.Application.Features.Matchmaking.Interfaces;
 
 public interface IMatchmakingService
 {

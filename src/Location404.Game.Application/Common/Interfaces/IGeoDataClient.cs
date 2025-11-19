@@ -1,7 +1,7 @@
 using Location404.Game.Application.DTOs;
 using Location404.Game.Application.Events;
 
-namespace Location404.Game.Application.Services;
+namespace Location404.Game.Application.Common.Interfaces;
 
 public interface IGeoDataClient
 {

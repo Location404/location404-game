@@ -6,20 +6,23 @@ using LiteBus.Commands.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Features.GameRounds.Commands;
-using Location404.Game.Application.Features.Matchmaking.Commands;
-using Location404.Game.Application.Services;
-using Location404.Game.Application.DTOs.Requests;
-using Location404.Game.Application.DTOs.Responses;
+using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
+using Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
+using Location404.Game.Application.Features.GameRounds;
 using Location404.Game.Application.Events;
 using Location404.Game.Domain.Entities;
 using Shared.Observability.Core;
 
 [Authorize]
 public class GameHub(
-    ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingResponse>> joinMatchmakingHandler,
-    ICommandHandler<StartRoundCommand, Result<StartRoundResponse>> startRoundHandler,
-    ICommandHandler<SubmitGuessCommand, Result<SubmitGuessResponse>> submitGuessHandler,
+    ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingCommandResponse>> joinMatchmakingHandler,
+    ICommandHandler<StartRoundCommand, Result<StartRoundCommandResponse>> startRoundHandler,
+    ICommandHandler<SubmitGuessCommand, Result<SubmitGuessCommandResponse>> submitGuessHandler,
     IGameMatchManager matchManager,
     IMatchmakingService matchmaking,
     IPlayerConnectionManager connectionManager,
@@ -29,9 +32,9 @@ public class GameHub(
 {
     #region Dependencies
 
-    private readonly ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingResponse>> _joinMatchmakingHandler = joinMatchmakingHandler;
-    private readonly ICommandHandler<StartRoundCommand, Result<StartRoundResponse>> _startRoundHandler = startRoundHandler;
-    private readonly ICommandHandler<SubmitGuessCommand, Result<SubmitGuessResponse>> _submitGuessHandler = submitGuessHandler;
+    private readonly ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingCommandResponse>> _joinMatchmakingHandler = joinMatchmakingHandler;
+    private readonly ICommandHandler<StartRoundCommand, Result<StartRoundCommandResponse>> _startRoundHandler = startRoundHandler;
+    private readonly ICommandHandler<SubmitGuessCommand, Result<SubmitGuessCommandResponse>> _submitGuessHandler = submitGuessHandler;
     private readonly IGameMatchManager _matchManager = matchManager;
     private readonly IMatchmakingService _matchmaking = matchmaking;
     private readonly IPlayerConnectionManager _connectionManager = connectionManager;

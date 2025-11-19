@@ -1,11 +1,12 @@
+using Location404.Game.Application.Features.GameRounds.Interfaces;
 using LiteBus.Commands.Abstractions;
 using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Services;
+
 using Location404.Game.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Location404.Game.Application.Features.GameRounds.Commands;
+namespace Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
 
 public class StartRoundCommandHandler(
     IGameMatchManager matchManager,
@@ -13,9 +14,9 @@ public class StartRoundCommandHandler(
     IRoundTimerService roundTimer,
     IGeoDataClient geoDataClient,
     ILogger<StartRoundCommandHandler> logger
-) : ICommandHandler<StartRoundCommand, Result<StartRoundResponse>>
+) : ICommandHandler<StartRoundCommand, Result<StartRoundCommandResponse>>
 {
-    public async Task<Result<StartRoundResponse>> HandleAsync(
+    public async Task<Result<StartRoundCommandResponse>> HandleAsync(
         StartRoundCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -28,7 +29,7 @@ public class StartRoundCommandHandler(
             if (match == null)
             {
                 logger.LogWarning("Match {MatchId} not found", command.MatchId);
-                return Result<StartRoundResponse>.Failure(
+                return Result<StartRoundCommandResponse>.Failure(
                     new Error("Match.NotFound", "Match not found.", ErrorType.NotFound));
             }
 
@@ -36,7 +37,7 @@ public class StartRoundCommandHandler(
             {
                 logger.LogWarning("Cannot start new round for match {MatchId}. Current round count: {RoundCount}",
                     command.MatchId, match.GameRounds?.Count ?? 0);
-                return Result<StartRoundResponse>.Failure(
+                return Result<StartRoundCommandResponse>.Failure(
                     new Error("Round.CannotStart", "Match has already reached maximum rounds.", ErrorType.Validation));
             }
 
@@ -79,7 +80,7 @@ public class StartRoundCommandHandler(
 
             await roundTimer.StartTimerAsync(match.Id, match.CurrentGameRound!.Id, TimeSpan.FromSeconds(durationSeconds));
 
-            return Result<StartRoundResponse>.Success(new StartRoundResponse(
+            return Result<StartRoundCommandResponse>.Success(new StartRoundCommandResponse(
                 MatchId: match.Id,
                 RoundId: match.CurrentGameRound!.Id,
                 RoundNumber: match.CurrentGameRound.RoundNumber,
@@ -93,7 +94,7 @@ public class StartRoundCommandHandler(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error starting round for match {MatchId}", command.MatchId);
-            return Result<StartRoundResponse>.Failure(
+            return Result<StartRoundCommandResponse>.Failure(
                 new Error("StartRound.Failed", $"Error starting round: {ex.Message}", ErrorType.Failure));
         }
     }

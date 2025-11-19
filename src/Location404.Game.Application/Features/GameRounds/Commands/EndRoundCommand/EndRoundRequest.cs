@@ -1,6 +1,6 @@
 using Location404.Game.Domain.Entities;
 
-namespace Location404.Game.Application.DTOs.Requests;
+namespace Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
 
 public record EndRoundRequest(
     Guid MatchId,

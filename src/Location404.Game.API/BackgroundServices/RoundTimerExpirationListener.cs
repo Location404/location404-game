@@ -10,9 +10,14 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.SignalR;
 using Location404.Game.API.Hubs;
-using Location404.Game.Application.Services;
-using Location404.Game.Application.DTOs.Responses;
-using Location404.Game.Application.Features.GameRounds.Commands;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
+using Location404.Game.Application.Features.GameRounds;
+using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
+using Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 using Location404.Game.Application.Common.Result;
 using LiteBus.Commands.Abstractions;
 
@@ -94,7 +99,7 @@ public class RoundTimerExpirationListener : BackgroundService
 
         var matchManager = scope.ServiceProvider.GetRequiredService<IGameMatchManager>();
         var guessStorage = scope.ServiceProvider.GetRequiredService<IGuessStorageManager>();
-        var endRoundHandler = scope.ServiceProvider.GetRequiredService<ICommandHandler<EndRoundCommand, Result<EndRoundResponse>>>();
+        var endRoundHandler = scope.ServiceProvider.GetRequiredService<ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>>>();
         var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<GameHub>>();
 
         try

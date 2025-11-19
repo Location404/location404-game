@@ -1,17 +1,18 @@
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
 using LiteBus.Commands.Abstractions;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Location404.Game.Application.Features.Matchmaking.Commands;
+namespace Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 
 public class JoinMatchmakingCommandHandler(
     IMatchmakingService matchmaking,
     IGameMatchManager matchManager,
     ILogger<JoinMatchmakingCommandHandler> logger
-) : ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingResponse>>
+) : ICommandHandler<JoinMatchmakingCommand, Result<JoinMatchmakingCommandResponse>>
 {
-    public async Task<Result<JoinMatchmakingResponse>> HandleAsync(
+    public async Task<Result<JoinMatchmakingCommandResponse>> HandleAsync(
         JoinMatchmakingCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -64,19 +65,19 @@ public class JoinMatchmakingCommandHandler(
                 logger.LogInformation("Match {MatchId} created for players {PlayerA} and {PlayerB}",
                     match.Id, match.PlayerAId, match.PlayerBId);
 
-                return Result<JoinMatchmakingResponse>.Success(
-                    new JoinMatchmakingResponse(MatchFound: true, Match: match));
+                return Result<JoinMatchmakingCommandResponse>.Success(
+                    new JoinMatchmakingCommandResponse(MatchFound: true, Match: match));
             }
 
             logger.LogInformation("Player {PlayerId} added to matchmaking queue", command.PlayerId);
 
-            return Result<JoinMatchmakingResponse>.Success(
-                new JoinMatchmakingResponse(MatchFound: false));
+            return Result<JoinMatchmakingCommandResponse>.Success(
+                new JoinMatchmakingCommandResponse(MatchFound: false));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error in JoinMatchmaking for player {PlayerId}", command.PlayerId);
-            return Result<JoinMatchmakingResponse>.Failure(
+            return Result<JoinMatchmakingCommandResponse>.Failure(
                 new Error("Matchmaking.Failed", $"Error joining matchmaking: {ex.Message}", ErrorType.Failure));
         }
     }
