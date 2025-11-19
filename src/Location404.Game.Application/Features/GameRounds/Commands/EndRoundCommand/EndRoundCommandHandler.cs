@@ -1,11 +1,12 @@
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
 using LiteBus.Commands.Abstractions;
 using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Services;
 using Location404.Game.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
-namespace Location404.Game.Application.Features.GameRounds.Commands;
+namespace Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
 
 public class EndRoundCommandHandler(
     IGameMatchManager matchManager,
@@ -14,9 +15,9 @@ public class EndRoundCommandHandler(
     IGameEventPublisher eventPublisher,
     IGeoDataClient geoDataClient,
     ILogger<EndRoundCommandHandler> logger
-) : ICommandHandler<EndRoundCommand, Result<EndRoundResponse>>
+) : ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>>
 {
-    public async Task<Result<EndRoundResponse>> HandleAsync(
+    public async Task<Result<EndRoundCommandResponse>> HandleAsync(
         EndRoundCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -36,7 +37,7 @@ public class EndRoundCommandHandler(
             if (match == null)
             {
                 logger.LogWarning("Match {MatchId} not found when trying to end round", command.MatchId);
-                return Result<EndRoundResponse>.Failure(
+                return Result<EndRoundCommandResponse>.Failure(
                     new Error("Match.NotFound", "Match not found when ending round.", ErrorType.NotFound));
             }
 
@@ -44,8 +45,8 @@ public class EndRoundCommandHandler(
             {
                 logger.LogInformation("Round {RoundId} was already ended for match {MatchId}. Skipping duplicate end.",
                     command.RoundId, command.MatchId);
-                return Result<EndRoundResponse>.Success(
-                    new EndRoundResponse(RoundEnded: true, MatchEnded: false));
+                return Result<EndRoundCommandResponse>.Success(
+                    new EndRoundCommandResponse(RoundEnded: true, MatchEnded: false));
             }
 
             var gameResponse = await guessStorage.GetCorrectAnswerAsync(command.MatchId, command.RoundId);
@@ -54,7 +55,7 @@ public class EndRoundCommandHandler(
             {
                 logger.LogError("❌ [EndRoundHandler] Resposta correta não encontrada para match {MatchId}, round {RoundId}",
                     command.MatchId, command.RoundId);
-                return Result<EndRoundResponse>.Failure(
+                return Result<EndRoundCommandResponse>.Failure(
                     new Error("Round.AnswerNotFound", "Round data corrupted.", ErrorType.NotFound));
             }
 
@@ -75,7 +76,7 @@ public class EndRoundCommandHandler(
 
             if (match.GameRounds == null || !match.GameRounds.Any())
             {
-                return Result<EndRoundResponse>.Failure(
+                return Result<EndRoundCommandResponse>.Failure(
                     new Error("Match.InvalidState", "Match must have rounds after ending a round.", ErrorType.Validation));
             }
 
@@ -159,17 +160,17 @@ public class EndRoundCommandHandler(
                 await matchManager.RemoveMatchAsync(match.Id);
                 logger.LogInformation("Match {MatchId} removed successfully from cache", match.Id);
 
-                return Result<EndRoundResponse>.Success(
-                    new EndRoundResponse(RoundEnded: true, MatchEnded: true, roundResult, matchResult));
+                return Result<EndRoundCommandResponse>.Success(
+                    new EndRoundCommandResponse(RoundEnded: true, MatchEnded: true, roundResult, matchResult));
             }
 
-            return Result<EndRoundResponse>.Success(
-                new EndRoundResponse(RoundEnded: true, MatchEnded: false, roundResult));
+            return Result<EndRoundCommandResponse>.Success(
+                new EndRoundCommandResponse(RoundEnded: true, MatchEnded: false, roundResult));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error ending round for match {MatchId}", command.MatchId);
-            return Result<EndRoundResponse>.Failure(
+            return Result<EndRoundCommandResponse>.Failure(
                 new Error("EndRound.Failed", $"Error ending round: {ex.Message}", ErrorType.Failure));
         }
     }

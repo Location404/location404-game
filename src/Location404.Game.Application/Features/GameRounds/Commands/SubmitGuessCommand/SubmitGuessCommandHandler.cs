@@ -1,23 +1,21 @@
 using LiteBus.Commands.Abstractions;
-
-using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
 using Location404.Game.Domain.Entities;
-
 using Microsoft.Extensions.Logging;
 
-namespace Location404.Game.Application.Features.GameRounds.Commands;
+namespace Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
 
 public class SubmitGuessCommandHandler(
     IGameMatchManager matchManager,
     IGuessStorageManager guessStorage,
     IRoundTimerService roundTimer,
-    ICommandHandler<EndRoundCommand, Result<EndRoundResponse>> endRoundHandler,
+    ICommandHandler<EndRoundCommand.EndRoundCommand, Result<EndRoundCommandResponse>> endRoundHandler,
     ILogger<SubmitGuessCommandHandler> logger
-) : ICommandHandler<SubmitGuessCommand, Result<SubmitGuessResponse>>
+) : ICommandHandler<SubmitGuessCommand, Result<SubmitGuessCommandResponse>>
 {
-    public async Task<Result<SubmitGuessResponse>> HandleAsync(
+    public async Task<Result<SubmitGuessCommandResponse>> HandleAsync(
         SubmitGuessCommand command,
         CancellationToken cancellationToken = default)
     {
@@ -31,14 +29,14 @@ public class SubmitGuessCommandHandler(
             if (match == null)
             {
                 logger.LogWarning("Match {MatchId} not found", command.MatchId);
-                return Result<SubmitGuessResponse>.Failure(
+                return Result<SubmitGuessCommandResponse>.Failure(
                     new Error("Match.NotFound", "Match not found.", ErrorType.NotFound));
             }
 
             if (match.CurrentGameRound == null)
             {
                 logger.LogWarning("No active round for match {MatchId}", command.MatchId);
-                return Result<SubmitGuessResponse>.Failure(
+                return Result<SubmitGuessCommandResponse>.Failure(
                     new Error("Round.NotActive", "No active round.", ErrorType.Validation));
             }
 
@@ -77,7 +75,7 @@ public class SubmitGuessCommandHandler(
                 logger.LogInformation("✅ [Handler] Ambos jogadores enviaram palpites para match {MatchId}. Delegando para EndRoundCommand...",
                     command.MatchId);
 
-                var endRoundCommand = new EndRoundCommand(
+                var endRoundCommand = new EndRoundCommand.EndRoundCommand(
                     MatchId: command.MatchId,
                     RoundId: currentRoundId,
                     PlayerAGuess: playerAGuess,
@@ -88,11 +86,11 @@ public class SubmitGuessCommandHandler(
 
                 if (endRoundResult.IsFailure)
                 {
-                    return Result<SubmitGuessResponse>.Failure(endRoundResult.Error);
+                    return Result<SubmitGuessCommandResponse>.Failure(endRoundResult.Error);
                 }
 
-                return Result<SubmitGuessResponse>.Success(
-                    new SubmitGuessResponse(
+                return Result<SubmitGuessCommandResponse>.Success(
+                    new SubmitGuessCommandResponse(
                         RoundEnded: endRoundResult.Value.RoundEnded,
                         MatchEnded: endRoundResult.Value.MatchEnded,
                         RoundResult: endRoundResult.Value.RoundResult,
@@ -100,14 +98,14 @@ public class SubmitGuessCommandHandler(
                     ));
             }
 
-            return Result<SubmitGuessResponse>.Success(
-                new SubmitGuessResponse(RoundEnded: false, MatchEnded: false));
+            return Result<SubmitGuessCommandResponse>.Success(
+                new SubmitGuessCommandResponse(RoundEnded: false, MatchEnded: false));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error submitting guess for player {PlayerId} in match {MatchId}",
                 command.PlayerId, command.MatchId);
-            return Result<SubmitGuessResponse>.Failure(
+            return Result<SubmitGuessCommandResponse>.Failure(
                 new Error("SubmitGuess.Failed", $"Error submitting guess: {ex.Message}", ErrorType.Failure));
         }
     }

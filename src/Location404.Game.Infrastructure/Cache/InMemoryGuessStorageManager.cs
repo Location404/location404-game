@@ -1,18 +1,15 @@
 namespace Location404.Game.Infrastructure.Cache;
 
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
 using Location404.Game.Domain.Entities;
 using System.Collections.Concurrent;
 
-/// <summary>
-/// In-memory implementation of IGuessStorageManager for development without Redis
-/// </summary>
 public class InMemoryGuessStorageManager : IGuessStorageManager
 {
-    // Key: "matchId:roundId:playerId", Value: Coordinate
     private readonly ConcurrentDictionary<string, Coordinate> _guesses = new();
 
-    // Key: "answer:matchId:roundId", Value: Coordinate
     private readonly ConcurrentDictionary<string, Coordinate> _correctAnswers = new();
 
     public Task StoreGuessAsync(Guid matchId, Guid roundId, Guid playerId, Coordinate guess)
@@ -46,7 +43,6 @@ public class InMemoryGuessStorageManager : IGuessStorageManager
             _guesses.TryRemove(key, out _);
         }
 
-        // Also remove correct answer
         var answerKey = GetAnswerKey(matchId, roundId);
         _correctAnswers.TryRemove(answerKey, out _);
 

@@ -1,4 +1,4 @@
-namespace Location404.Game.Application.DTOs.Responses;
+namespace Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 
 public record MatchFoundResponse(
     Guid MatchId,

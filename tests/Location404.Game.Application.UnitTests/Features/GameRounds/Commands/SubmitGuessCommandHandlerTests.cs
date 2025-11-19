@@ -3,8 +3,12 @@ using LiteBus.Commands.Abstractions;
 using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Common.Result;
 using Location404.Game.Application.Events;
-using Location404.Game.Application.Features.GameRounds.Commands;
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
+using Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
 using Location404.Game.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -16,7 +20,7 @@ public class SubmitGuessCommandHandlerTests
     private readonly IGameMatchManager _matchManager;
     private readonly IGuessStorageManager _guessStorage;
     private readonly IRoundTimerService _roundTimer;
-    private readonly ICommandHandler<EndRoundCommand, Result<EndRoundResponse>> _endRoundHandler;
+    private readonly ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>> _endRoundHandler;
     private readonly ILogger<SubmitGuessCommandHandler> _logger;
     private readonly SubmitGuessCommandHandler _handler;
 
@@ -25,7 +29,7 @@ public class SubmitGuessCommandHandlerTests
         _matchManager = Substitute.For<IGameMatchManager>();
         _guessStorage = Substitute.For<IGuessStorageManager>();
         _roundTimer = Substitute.For<IRoundTimerService>();
-        _endRoundHandler = Substitute.For<ICommandHandler<EndRoundCommand, Result<EndRoundResponse>>>();
+        _endRoundHandler = Substitute.For<ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>>>();
         _logger = Substitute.For<ILogger<SubmitGuessCommandHandler>>();
 
         _handler = new SubmitGuessCommandHandler(
@@ -143,7 +147,7 @@ public class SubmitGuessCommandHandlerTests
             Guess: playerBGuess
         );
 
-        var endRoundResponse = new EndRoundResponse(
+        var endRoundResponse = new EndRoundCommandResponse(
             RoundEnded: true,
             MatchEnded: false,
             RoundResult: new RoundEndResult(
@@ -161,7 +165,7 @@ public class SubmitGuessCommandHandlerTests
         _guessStorage.GetBothGuessesAsync(match.Id, roundId, playerAId, playerBId)
             .Returns((playerAGuess, playerBGuess));
         _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<EndRoundResponse>.Success(endRoundResponse));
+            .Returns(Result<EndRoundCommandResponse>.Success(endRoundResponse));
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -224,7 +228,7 @@ public class SubmitGuessCommandHandlerTests
             Guess: finalPlayerBGuess
         );
 
-        var endRoundResponse = new EndRoundResponse(
+        var endRoundResponse = new EndRoundCommandResponse(
             RoundEnded: true,
             MatchEnded: true,
             RoundResult: new RoundEndResult(
@@ -248,7 +252,7 @@ public class SubmitGuessCommandHandlerTests
         _guessStorage.GetBothGuessesAsync(match.Id, finalRoundId, playerAId, playerBId)
             .Returns((finalPlayerAGuess, finalPlayerBGuess));
         _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<EndRoundResponse>.Success(endRoundResponse));
+            .Returns(Result<EndRoundCommandResponse>.Success(endRoundResponse));
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -288,7 +292,7 @@ public class SubmitGuessCommandHandlerTests
         _guessStorage.GetBothGuessesAsync(match.Id, roundId, playerAId, playerBId)
             .Returns((playerAGuess, playerBGuess));
         _endRoundHandler.HandleAsync(Arg.Any<EndRoundCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result<EndRoundResponse>.Failure(
+            .Returns(Result<EndRoundCommandResponse>.Failure(
                 new Error("Round.AnswerNotFound", "Round data corrupted.", Common.Result.ErrorType.NotFound)));
 
         // Act

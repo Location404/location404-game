@@ -1,7 +1,8 @@
 using Location404.Game.Domain.Entities;
-using Location404.Game.Application.Features.GameRounds.Commands;
+using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
+using Location404.Game.Application.DTOs;
 
-namespace Location404.Game.Application.DTOs.Responses;
+namespace Location404.Game.Application.Features.GameRounds;
 
 public record RoundEndedResponse(
     Guid MatchId,

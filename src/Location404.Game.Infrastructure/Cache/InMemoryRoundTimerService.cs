@@ -4,7 +4,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
 
 public class InMemoryRoundTimerService : IRoundTimerService
 {

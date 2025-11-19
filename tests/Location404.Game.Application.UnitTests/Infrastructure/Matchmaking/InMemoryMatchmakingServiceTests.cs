@@ -1,7 +1,9 @@
 namespace Location404.Game.Application.UnitTests.Infrastructure.Matchmaking;
 
 using FluentAssertions;
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
 using Location404.Game.Domain.Entities;
 using Location404.Game.Infrastructure.Matchmaking;
 using NSubstitute;

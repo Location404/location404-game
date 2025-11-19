@@ -1,4 +1,4 @@
-namespace Location404.Game.Application.Services;
+namespace Location404.Game.Application.Features.GameRounds.Interfaces;
 
 public interface IRoundTimerService
 {

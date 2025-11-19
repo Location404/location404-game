@@ -1,11 +1,10 @@
 namespace Location404.Game.Infrastructure.Cache;
 
-using Location404.Game.Application.Services;
+using Location404.Game.Application.Common.Interfaces;
+using Location404.Game.Application.Features.GameRounds.Interfaces;
+using Location404.Game.Application.Features.Matchmaking.Interfaces;
 using System.Collections.Concurrent;
 
-/// <summary>
-/// In-memory implementation of IPlayerConnectionManager for development without Redis
-/// </summary>
 public class InMemoryPlayerConnectionManager : IPlayerConnectionManager
 {
     private readonly ConcurrentDictionary<Guid, string> _connections = new();
