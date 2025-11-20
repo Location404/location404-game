@@ -17,13 +17,10 @@ public class GeoDataClient : IGeoDataClient
     private readonly ILogger<GeoDataClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public GeoDataClient(HttpClient httpClient, IOptions<Location404DataSettings> settings, ILogger<GeoDataClient> logger)
+    public GeoDataClient(HttpClient httpClient, ILogger<GeoDataClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
-
-        _httpClient.BaseAddress = new Uri(settings.Value.BaseUrl);
-        _httpClient.Timeout = TimeSpan.FromSeconds(settings.Value.TimeoutSeconds);
 
         _jsonOptions = new JsonSerializerOptions
         {
