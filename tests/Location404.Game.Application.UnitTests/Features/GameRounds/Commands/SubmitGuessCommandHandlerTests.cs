@@ -243,8 +243,12 @@ public class SubmitGuessCommandHandlerTests
             MatchResult: new MatchEndResult(
                 MatchId: match.Id,
                 WinnerId: Guid.Empty,
+                LoserId: Guid.Empty,
                 PlayerAFinalPoints: 20000,
-                PlayerBFinalPoints: 20000
+                PlayerBFinalPoints: 20000,
+                PointsEarned: 0,
+                PointsLost: 0,
+                Rounds: match.GameRounds?.ToList() ?? new List<Domain.Entities.GameRound>()
             )
         );
 
