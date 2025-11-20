@@ -6,10 +6,6 @@ using LiteBus.Commands.Abstractions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Location404.Game.Application.Common.Result;
-using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
-using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
-using Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
-using Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Features.GameRounds.Interfaces;
 using Location404.Game.Application.Features.Matchmaking.Interfaces;
@@ -17,6 +13,20 @@ using Location404.Game.Application.Features.GameRounds;
 using Location404.Game.Application.Events;
 using Location404.Game.Domain.Entities;
 using Shared.Observability.Core;
+using JoinMatchmakingCommand = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommand;
+using JoinMatchmakingCommandResponse = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommandResponse;
+using JoinMatchmakingRequest = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingRequest;
+using MatchFoundResponse = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.MatchFoundResponse;
+using StartRoundCommand = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommand;
+using StartRoundCommandResponse = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommandResponse;
+using StartRoundRequest = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundRequest;
+using RoundStartedResponse = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.RoundStartedResponse;
+using LocationData = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.LocationData;
+using SubmitGuessCommand = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommand;
+using SubmitGuessCommandResponse = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommandResponse;
+using SubmitGuessRequest = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessRequest;
+using RoundEndedResponse = Location404.Game.Application.Features.GameRounds.RoundEndedResponse;
+using MatchEndedResponse = Location404.Game.Application.Features.GameRounds.MatchEndedResponse;
 
 [Authorize]
 public class GameHub(
