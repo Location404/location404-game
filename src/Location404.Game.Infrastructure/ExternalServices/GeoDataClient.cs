@@ -17,7 +17,7 @@ public class GeoDataClient : IGeoDataClient
     private readonly ILogger<GeoDataClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public GeoDataClient(HttpClient httpClient, IOptions<GeoDataServiceSettings> settings, ILogger<GeoDataClient> logger)
+    public GeoDataClient(HttpClient httpClient, IOptions<Location404DataSettings> settings, ILogger<GeoDataClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;

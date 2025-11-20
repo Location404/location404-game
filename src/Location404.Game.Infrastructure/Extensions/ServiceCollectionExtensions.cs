@@ -131,13 +131,13 @@ public static class ServiceCollectionExtensions
     private static IServiceCollection AddHttpClients(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<GameDataClientSettings>(configuration.GetSection("GameDataClient"));
-        services.Configure<GeoDataServiceSettings>(configuration.GetSection("GeoDataService"));
+        services.Configure<Location404DataSettings>(configuration.GetSection("Location404Data"));
 
         var gameDataSettings = configuration.GetSection("GameDataClient").Get<GameDataClientSettings>()
             ?? new GameDataClientSettings();
 
-        var geoDataSettings = configuration.GetSection("GeoDataService").Get<GeoDataServiceSettings>()
-            ?? new GeoDataServiceSettings();
+        var geoDataSettings = configuration.GetSection("Location404Data").Get<Location404DataSettings>()
+            ?? new Location404DataSettings();
 
         services.AddHttpClient<IGameDataClient, GameDataHttpClient>(client =>
         {
