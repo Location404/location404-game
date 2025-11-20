@@ -11,13 +11,13 @@ using System.Text.Json;
 
 namespace Location404.Game.Infrastructure.ExternalServices;
 
-public class GeoDataClient : IGeoDataClient
+public class Location404DataClient : ILocation404DataClient
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<GeoDataClient> _logger;
+    private readonly ILogger<Location404DataClient> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public GeoDataClient(HttpClient httpClient, ILogger<GeoDataClient> logger)
+    public Location404DataClient(HttpClient httpClient, ILogger<Location404DataClient> logger)
     {
         _httpClient = httpClient;
         _logger = logger;
@@ -33,7 +33,7 @@ public class GeoDataClient : IGeoDataClient
     {
         try
         {
-            _logger.LogInformation("Fetching random location from geo-data-service");
+            _logger.LogInformation("Fetching random location from location404-data");
 
             var response = await _httpClient.GetAsync("/api/locations/random", cancellationToken);
 
@@ -56,7 +56,7 @@ public class GeoDataClient : IGeoDataClient
         }
         catch (HttpRequestException ex)
         {
-            _logger.LogError(ex, "HTTP error fetching random location from geo-data-service");
+            _logger.LogError(ex, "HTTP error fetching random location from location404-data");
             return null;
         }
         catch (Exception ex)
@@ -70,7 +70,7 @@ public class GeoDataClient : IGeoDataClient
     {
         try
         {
-            _logger.LogInformation("Sending match ended event via HTTP to geo-data-service for match {MatchId}", matchEvent.MatchId);
+            _logger.LogInformation("Sending match ended event via HTTP to location404-data for match {MatchId}", matchEvent.MatchId);
 
             var json = JsonSerializer.Serialize(matchEvent, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");

@@ -13,7 +13,7 @@ public class EndRoundCommandHandler(
     IGuessStorageManager guessStorage,
     IRoundTimerService roundTimer,
     IGameEventPublisher eventPublisher,
-    IGeoDataClient geoDataClient,
+    ILocation404DataClient location404DataClient,
     ILogger<EndRoundCommandHandler> logger
 ) : ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>>
 {
@@ -143,7 +143,7 @@ public class EndRoundCommandHandler(
                     {
                         try
                         {
-                            var success = await geoDataClient.SendMatchEndedAsync(matchEvent);
+                            var success = await location404DataClient.SendMatchEndedAsync(matchEvent);
                             if (!success)
                             {
                                 logger.LogError("HTTP fallback also failed for match {MatchId}. Match data may not be persisted!", match.Id);

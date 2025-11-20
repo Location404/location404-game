@@ -3,7 +3,7 @@ using Location404.Game.Application.Events;
 
 namespace Location404.Game.Application.Common.Interfaces;
 
-public interface IGeoDataClient
+public interface ILocation404DataClient
 {
     Task<LocationDto?> GetRandomLocationAsync(CancellationToken cancellationToken = default);
     Task<bool> SendMatchEndedAsync(GameMatchEndedEvent matchEvent, CancellationToken cancellationToken = default);

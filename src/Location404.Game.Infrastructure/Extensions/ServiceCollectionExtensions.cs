@@ -136,7 +136,7 @@ public static class ServiceCollectionExtensions
         var gameDataSettings = configuration.GetSection("GameDataClient").Get<GameDataClientSettings>()
             ?? new GameDataClientSettings();
 
-        var geoDataSettings = configuration.GetSection("Location404Data").Get<Location404DataSettings>()
+        var location404DataSettings = configuration.GetSection("Location404Data").Get<Location404DataSettings>()
             ?? new Location404DataSettings();
 
         services.AddHttpClient<IGameDataClient, GameDataHttpClient>(client =>
@@ -145,10 +145,10 @@ public static class ServiceCollectionExtensions
             client.Timeout = TimeSpan.FromSeconds(gameDataSettings.TimeoutSeconds);
         });
 
-        services.AddHttpClient<IGeoDataClient, GeoDataClient>(client =>
+        services.AddHttpClient<ILocation404DataClient, Location404DataClient>(client =>
         {
-            client.BaseAddress = new Uri(geoDataSettings.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(geoDataSettings.TimeoutSeconds);
+            client.BaseAddress = new Uri(location404DataSettings.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(location404DataSettings.TimeoutSeconds);
         })
         .AddPolicyHandler(GetRetryPolicy())
         .AddPolicyHandler(GetCircuitBreakerPolicy());

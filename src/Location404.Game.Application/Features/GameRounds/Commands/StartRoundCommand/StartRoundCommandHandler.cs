@@ -12,7 +12,7 @@ public class StartRoundCommandHandler(
     IGameMatchManager matchManager,
     IGuessStorageManager guessStorage,
     IRoundTimerService roundTimer,
-    IGeoDataClient geoDataClient,
+    ILocation404DataClient location404DataClient,
     ILogger<StartRoundCommandHandler> logger
 ) : ICommandHandler<StartRoundCommand, Result<StartRoundCommandResponse>>
 {
@@ -44,7 +44,7 @@ public class StartRoundCommandHandler(
             match.StartNewGameRound();
             await matchManager.UpdateMatchAsync(match);
 
-            var locationDto = await geoDataClient.GetRandomLocationAsync();
+            var locationDto = await location404DataClient.GetRandomLocationAsync();
 
             Coordinate location;
             int? heading;
@@ -56,11 +56,11 @@ public class StartRoundCommandHandler(
                 heading = locationDto.Heading ?? Random.Shared.Next(0, 360);
                 pitch = locationDto.Pitch ?? Random.Shared.Next(-10, 10);
 
-                logger.LogInformation("Using location from geo-data-service: {Name}", locationDto.Name);
+                logger.LogInformation("Using location from location404-data: {Name}", locationDto.Name);
             }
             else
             {
-                logger.LogWarning("geo-data-service unavailable, using fallback hardcoded location");
+                logger.LogWarning("location404-data unavailable, using fallback hardcoded location");
                 location = GenerateFallbackLocation();
                 heading = Random.Shared.Next(0, 360);
                 pitch = Random.Shared.Next(-10, 10);
