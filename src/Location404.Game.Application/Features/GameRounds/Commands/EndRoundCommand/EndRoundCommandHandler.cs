@@ -121,8 +121,12 @@ public class EndRoundCommandHandler(
                 var matchResult = new MatchEndResult(
                     MatchId: match.Id,
                     WinnerId: match.PlayerWinnerId ?? Guid.Empty,
+                    LoserId: match.PlayerLoserId ?? Guid.Empty,
                     PlayerAFinalPoints: match.PlayerATotalPoints ?? 0,
-                    PlayerBFinalPoints: match.PlayerBTotalPoints ?? 0
+                    PlayerBFinalPoints: match.PlayerBTotalPoints ?? 0,
+                    PointsEarned: match.PointsEarned ?? 0,
+                    PointsLost: match.PointsLost ?? 0,
+                    Rounds: match.GameRounds?.ToList() ?? new List<Domain.Entities.GameRound>()
                 );
 
                 logger.LogInformation("Match {MatchId} ended. Winner: {WinnerId}",

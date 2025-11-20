@@ -35,18 +35,16 @@ public record MatchEndedResponse(
 
     public static MatchEndedResponse FromMatchEndResult(MatchEndResult result)
     {
-        var loserId = result.WinnerId != Guid.Empty ? (Guid?)result.WinnerId : null;
-
         return new MatchEndedResponse(
             result.MatchId,
             result.WinnerId != Guid.Empty ? result.WinnerId : null,
-            loserId,
+            result.LoserId != Guid.Empty ? result.LoserId : null,
             result.PlayerAFinalPoints,
             result.PlayerBFinalPoints,
-            null,
-            null,
+            result.PointsEarned,
+            result.PointsLost,
             DateTime.UtcNow,
-            new List<GameRoundDto>()
+            result.Rounds.Select(GameRoundDto.FromEntity).ToList()
         );
     }
 }

@@ -29,6 +29,10 @@ public record PlayerGuessResult(
 public record MatchEndResult(
     Guid MatchId,
     Guid WinnerId,
+    Guid LoserId,
     int PlayerAFinalPoints,
-    int PlayerBFinalPoints
+    int PlayerBFinalPoints,
+    int PointsEarned,
+    int PointsLost,
+    List<GameRound> Rounds
 );
