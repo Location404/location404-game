@@ -1,7 +1,6 @@
 using LiteBus.Commands.Extensions.MicrosoftDependencyInjection;
 using LiteBus.Messaging.Extensions.MicrosoftDependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 
 namespace Location404.Game.Infrastructure;
 
@@ -13,7 +12,8 @@ public static class DependencyInjection
         {
             liteBus.AddCommandModule(module =>
             {
-                module.RegisterFromAssembly(typeof(JoinMatchmakingCommandHandler).Assembly);
+                module.RegisterFromAssembly(
+                    typeof(Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommandHandler).Assembly);
             });
         });
 
