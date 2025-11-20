@@ -21,7 +21,7 @@ public class EndRoundCommandHandlerTests
     private readonly IGuessStorageManager _guessStorage;
     private readonly IRoundTimerService _roundTimer;
     private readonly IGameEventPublisher _eventPublisher;
-    private readonly IGeoDataClient _geoDataClient;
+    private readonly ILocation404DataClient _location404DataClient;
     private readonly ILogger<EndRoundCommandHandler> _logger;
     private readonly EndRoundCommandHandler _handler;
 
@@ -31,7 +31,7 @@ public class EndRoundCommandHandlerTests
         _guessStorage = Substitute.For<IGuessStorageManager>();
         _roundTimer = Substitute.For<IRoundTimerService>();
         _eventPublisher = Substitute.For<IGameEventPublisher>();
-        _geoDataClient = Substitute.For<IGeoDataClient>();
+        _location404DataClient = Substitute.For<ILocation404DataClient>();
         _logger = Substitute.For<ILogger<EndRoundCommandHandler>>();
 
         _handler = new EndRoundCommandHandler(
@@ -39,7 +39,7 @@ public class EndRoundCommandHandlerTests
             _guessStorage,
             _roundTimer,
             _eventPublisher,
-            _geoDataClient,
+            _location404DataClient,
             _logger
         );
     }
@@ -264,7 +264,7 @@ public class EndRoundCommandHandlerTests
         _guessStorage.GetCorrectAnswerAsync(match.Id, finalRoundId).Returns(finalLocation);
         _eventPublisher.PublishMatchEndedAsync(Arg.Any<Application.Events.GameMatchEndedEvent>())
             .Returns<Task>(_ => throw new Exception("RabbitMQ connection failed"));
-        _geoDataClient.SendMatchEndedAsync(Arg.Any<Application.Events.GameMatchEndedEvent>())
+        _location404DataClient.SendMatchEndedAsync(Arg.Any<Application.Events.GameMatchEndedEvent>())
             .Returns(true);
 
         // Act

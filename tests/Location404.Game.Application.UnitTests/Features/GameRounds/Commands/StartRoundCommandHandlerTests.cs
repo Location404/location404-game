@@ -18,7 +18,7 @@ public class StartRoundCommandHandlerTests
     private readonly IGameMatchManager _matchManager;
     private readonly IGuessStorageManager _guessStorage;
     private readonly IRoundTimerService _roundTimer;
-    private readonly IGeoDataClient _geoDataClient;
+    private readonly ILocation404DataClient _location404DataClient;
     private readonly ILogger<StartRoundCommandHandler> _logger;
     private readonly StartRoundCommandHandler _handler;
 
@@ -27,14 +27,14 @@ public class StartRoundCommandHandlerTests
         _matchManager = Substitute.For<IGameMatchManager>();
         _guessStorage = Substitute.For<IGuessStorageManager>();
         _roundTimer = Substitute.For<IRoundTimerService>();
-        _geoDataClient = Substitute.For<IGeoDataClient>();
+        _location404DataClient = Substitute.For<ILocation404DataClient>();
         _logger = Substitute.For<ILogger<StartRoundCommandHandler>>();
 
         _handler = new StartRoundCommandHandler(
             _matchManager,
             _guessStorage,
             _roundTimer,
-            _geoDataClient,
+            _location404DataClient,
             _logger
         );
     }
@@ -106,7 +106,7 @@ public class StartRoundCommandHandlerTests
         );
 
         _matchManager.GetMatchAsync(match.Id).Returns(match);
-        _geoDataClient.GetRandomLocationAsync().Returns(locationDto);
+        _location404DataClient.GetRandomLocationAsync().Returns(locationDto);
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -149,7 +149,7 @@ public class StartRoundCommandHandlerTests
         var command = new StartRoundCommand(match.Id);
 
         _matchManager.GetMatchAsync(match.Id).Returns(match);
-        _geoDataClient.GetRandomLocationAsync().Returns(Task.FromResult<LocationDto?>(null));
+        _location404DataClient.GetRandomLocationAsync().Returns(Task.FromResult<LocationDto?>(null));
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -203,7 +203,7 @@ public class StartRoundCommandHandlerTests
         );
 
         _matchManager.GetMatchAsync(match.Id).Returns(match);
-        _geoDataClient.GetRandomLocationAsync().Returns(locationDto);
+        _location404DataClient.GetRandomLocationAsync().Returns(locationDto);
 
         // Act
         var result = await _handler.HandleAsync(command);
@@ -237,7 +237,7 @@ public class StartRoundCommandHandlerTests
         );
 
         _matchManager.GetMatchAsync(match.Id).Returns(match);
-        _geoDataClient.GetRandomLocationAsync().Returns(locationDto);
+        _location404DataClient.GetRandomLocationAsync().Returns(locationDto);
 
         // Act
         var result = await _handler.HandleAsync(command);
