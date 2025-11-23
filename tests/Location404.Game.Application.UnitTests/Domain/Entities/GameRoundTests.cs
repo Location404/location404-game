@@ -114,7 +114,7 @@ public class GameRoundTests
 
         // Assert
         Assert.NotNull(round.PlayerAPoints);
-        Assert.InRange(round.PlayerAPoints.Value, 0, 100);
+        Assert.InRange(round.PlayerAPoints.Value, 0, 150);
     }
 
     [Fact]

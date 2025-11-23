@@ -205,13 +205,14 @@ public class UserTests
         // Arrange
         var userId = Guid.NewGuid();
         var opponentId = Guid.NewGuid();
+        var baseTime = new DateTime(2024, 1, 1, 12, 0, 0, DateTimeKind.Utc);
 
         var oldMatch = new GameMatch(
             Guid.NewGuid(),
             userId,
             opponentId,
-            DateTime.UtcNow.AddDays(-3),
-            DateTime.UtcNow.AddDays(-2),
+            baseTime.AddDays(-3),
+            baseTime.AddDays(-2),
             userId,
             opponentId,
             100,
@@ -222,8 +223,8 @@ public class UserTests
             Guid.NewGuid(),
             userId,
             opponentId,
-            DateTime.UtcNow.AddHours(-1),
-            DateTime.UtcNow,
+            baseTime.AddHours(-1),
+            baseTime,
             opponentId,
             userId,
             100,
@@ -299,18 +300,17 @@ public class UserTests
     }
 
     [Fact]
-    public void HistoryGameResults_ShouldBeCachedProperty()
+    public void HistoryGameResults_ShouldReturnEmptyArrayWhenNoHistory()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var user = new User(userId, "user", "user@test.com");
 
         // Act
-        var results1 = user.HistoryGameResults;
-        var results2 = user.HistoryGameResults;
+        var results = user.HistoryGameResults;
 
         // Assert
-        Assert.NotSame(results1, results2);
+        Assert.Empty(results);
     }
 
     [Fact]
