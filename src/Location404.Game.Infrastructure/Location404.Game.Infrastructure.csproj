@@ -20,4 +20,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Location404.Game.Application.UnitTests" />
+  </ItemGroup>
+
 </Project>
