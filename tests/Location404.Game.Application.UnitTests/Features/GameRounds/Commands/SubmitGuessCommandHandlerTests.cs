@@ -248,7 +248,7 @@ public class SubmitGuessCommandHandlerTests
                 PlayerBFinalPoints: 20000,
                 PointsEarned: 0,
                 PointsLost: 0,
-                Rounds: match.GameRounds?.ToList() ?? new List<Domain.Entities.GameRound>()
+                Rounds: match.GameRounds?.ToList() ?? new List<GameRound>()
             )
         );
 
