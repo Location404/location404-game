@@ -75,11 +75,15 @@ O **Location404 Game Engine** é o serviço responsável por toda a lógica de j
 
 O projeto segue **Clean Architecture** com separação clara de responsabilidades:
 
-![Arquitetura Clean Architecture](docs/diagrams/clean-architecture.svg)
+<p align="center">
+  <img src="docs/diagrams/clean-architecture.svg" alt="Arquitetura Clean Architecture" width="800"/>
+</p>
 
 ### Fluxo de Dados
 
-![Diagrama de Fluxo SignalR](docs/diagrams/diagrama-signalr.svg)
+<p align="center">
+  <img src="docs/diagrams/diagrama-signalr.svg" alt="Diagrama de Fluxo SignalR" width="900"/>
+</p>
 
 ```
 Frontend (SignalR Client)
