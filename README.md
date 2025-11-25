@@ -115,31 +115,7 @@ O projeto segue **Clean Architecture** com separação clara de responsabilidade
 ### Fluxo de Dados
 
 ```
-Frontend (SignalR Client)
-    │
-    ├─ JoinMatchmaking ──► Matchmaking Queue (Redis)
-    │                      │
-    │                      ├─ 2 players found
-    │                      │
-    ├─◄ MatchFound        Match Created (Redis)
-    │                      │
-    ├─ StartRound ────────►│
-    │                      ├─ Fetch Random Location (HTTP → location404-data API)
-    │                      │
-    ├─◄ RoundStarted       Store Round State (Redis)
-    │                      │
-    ├─ SubmitGuess ───────►│
-    │                      ├─ Both guesses received?
-    │                      │
-    │                      ├─ YES: Calculate distance & points
-    ├─◄ RoundEnded        │     Store results
-    │                      │
-    │                      ├─ Match complete (3 rounds)?
-    │                      │
-    ├─◄ MatchEnded         ├─ YES: Publish to RabbitMQ (match.ended)
-                           │     Clean up Redis state
-                           │
-                           └─► location404-data (processes stats)
+... TODO: ADICIONAR
 ```
 
 ## 🛠️ Tecnologias
@@ -634,4 +610,5 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 <p align="center">
   Desenvolvido por <a href="https://github.com/ryanbromati">ryanbromati</a>
 </p>
+
 
