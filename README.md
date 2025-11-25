@@ -76,44 +76,11 @@ O **Location404 Game Engine** é o serviço responsável por toda a lógica de j
 
 O projeto segue **Clean Architecture** com separação clara de responsabilidades:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     API Layer (SignalR)                      │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
-│  │  GameHub    │  │ Health       │  │  Middlewares     │   │
-│  │  (SignalR)  │  │ Checks       │  │  (CORS, Auth)    │   │
-│  └─────────────┘  └──────────────┘  └──────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                         │
-│  ┌──────────────────┐  ┌──────────────────────────────┐    │
-│  │ Command Handlers │  │  Interfaces (Contracts)      │    │
-│  │ - JoinMatchmaking│  │  - IMatchmakingService       │    │
-│  │ - StartRound     │  │  - IGameMatchManager         │    │
-│  │ - SubmitGuess    │  │  - IPlayerConnectionManager  │    │
-│  └──────────────────┘  └──────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                      Domain Layer                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐   │
-│  │  Entities    │  │ Value Objects│  │  Domain Events  │   │
-│  │  - GameMatch │  │  - Coordinate│  │  - RoundEnded   │   │
-│  │  - GameRound │  │  - Location  │  │  - MatchEnded   │   │
-│  └──────────────┘  └──────────────┘  └─────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-                            │
-┌─────────────────────────────────────────────────────────────┐
-│                  Infrastructure Layer                        │
-│  ┌─────────┐  ┌──────────┐  ┌──────────────┐  ┌─────────┐ │
-│  │  Redis  │  │ RabbitMQ │  │  HTTP Client │  │  DI     │ │
-│  │ (State) │  │(Messaging│  │(Location API)│  │ Setup   │ │
-│  └─────────┘  └──────────┘  └──────────────┘  └─────────┘ │
-└─────────────────────────────────────────────────────────────┘
-```
+![Arquitetura Clean Architecture](docs/diagrams/clean-architecture.svg)
 
 ### Fluxo de Dados
+
+![Diagrama de Fluxo SignalR](docs/diagrams/diagrama-signalr.svg)
 
 ```
 Frontend (SignalR Client)
