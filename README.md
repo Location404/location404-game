@@ -22,7 +22,6 @@ Motor de jogo em tempo real para o Location404 - sistema de matchmaking, gerenci
 - [Estrutura do Projeto](#-estrutura-do-projeto)
 - [Testes](#-testes)
 - [Observabilidade](#-observabilidade)
-- [Contribuindo](#-contribuindo)
 - [Licença](#-licença)
 
 ## 🎯 Sobre o Projeto
@@ -579,34 +578,6 @@ curl http://localhost:5170/health/live
 - RabbitMQ (timeout: 5s)
 - location404-data API (timeout: 10s)
 
-## 🤝 Contribuindo
-
-Contribuições são bem-vindas! Por favor, siga estas diretrizes:
-
-1. **Fork** o projeto
-2. Crie uma **branch** para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. **Commit** suas mudanças (`git commit -m 'feat: adicionar nova funcionalidade'`)
-4. **Push** para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um **Pull Request**
-
-### Padrões de Commit
-
-Seguimos [Conventional Commits](https://www.conventionalcommits.org/):
-
-- `feat:` - Nova funcionalidade
-- `fix:` - Correção de bug
-- `docs:` - Alteração em documentação
-- `test:` - Adição/modificação de testes
-- `refactor:` - Refatoração de código
-- `chore:` - Tarefas gerais (build, CI/CD)
-
-### Code Review
-
-Todo PR passa por:
-- ✅ CI/CD pipeline (build + testes)
-- ✅ Code review por mantenedor
-- ✅ Cobertura de código > 80%
-
 ## 📄 Licença
 
 Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
@@ -628,5 +599,5 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 ---
 
 <p align="center">
-  Desenvolvido com ❤️ pela equipe Location404
+  Desenvolvido por <a href="https://github.com/ryanbromati">ryanbromati</a>
 </p>
