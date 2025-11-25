@@ -77,38 +77,38 @@ O projeto segue **Clean Architecture** com separação clara de responsabilidade
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     API Layer (SignalR)                      │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
-│  │  GameHub    │  │ Health       │  │  Middlewares     │   │
-│  │  (SignalR)  │  │ Checks       │  │  (CORS, Auth)    │   │
-│  └─────────────┘  └──────────────┘  └──────────────────┘   │
+│                     API Layer (SignalR)                     │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐    │
+│  │  GameHub    │  │ Health       │  │  Middlewares     │    │
+│  │  (SignalR)  │  │ Checks       │  │  (CORS, Auth)    │    │
+│  └─────────────┘  └──────────────┘  └──────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
-│                    Application Layer                         │
-│  ┌──────────────────┐  ┌──────────────────────────────┐    │
-│  │ Command Handlers │  │  Interfaces (Contracts)      │    │
-│  │ - JoinMatchmaking│  │  - IMatchmakingService       │    │
-│  │ - StartRound     │  │  - IGameMatchManager         │    │
-│  │ - SubmitGuess    │  │  - IPlayerConnectionManager  │    │
-│  └──────────────────┘  └──────────────────────────────┘    │
+│                    Application Layer                        │
+│  ┌──────────────────┐  ┌──────────────────────────────┐     │
+│  │ Command Handlers │  │  Interfaces (Contracts)      │     │
+│  │ - JoinMatchmaking│  │  - IMatchmakingService       │     │
+│  │ - StartRound     │  │  - IGameMatchManager         │     │
+│  │ - SubmitGuess    │  │  - IPlayerConnectionManager  │     │
+│  └──────────────────┘  └──────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
-│                      Domain Layer                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐   │
-│  │  Entities    │  │ Value Objects│  │  Domain Events  │   │
-│  │  - GameMatch │  │  - Coordinate│  │  - RoundEnded   │   │
-│  │  - GameRound │  │  - Location  │  │  - MatchEnded   │   │
-│  └──────────────┘  └──────────────┘  └─────────────────┘   │
+│                      Domain Layer                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐    │
+│  │  Entities    │  │ Value Objects│  │  Domain Events  │    │
+│  │  - GameMatch │  │  - Coordinate│  │  - RoundEnded   │    │
+│  │  - GameRound │  │  - Location  │  │  - MatchEnded   │    │
+│  └──────────────┘  └──────────────┘  └─────────────────┘    │
 └─────────────────────────────────────────────────────────────┘
                             │
 ┌─────────────────────────────────────────────────────────────┐
-│                  Infrastructure Layer                        │
-│  ┌─────────┐  ┌──────────┐  ┌──────────────┐  ┌─────────┐ │
-│  │  Redis  │  │ RabbitMQ │  │  HTTP Client │  │  DI     │ │
-│  │ (State) │  │(Messaging│  │(Location API)│  │ Setup   │ │
-│  └─────────┘  └──────────┘  └──────────────┘  └─────────┘ │
+│                  Infrastructure Layer                       │
+│  ┌─────────┐  ┌──────────┐  ┌──────────────┐  ┌─────────┐   │
+│  │  Redis  │  │ RabbitMQ │  │  HTTP Client │  │  DI     │   │
+│  │ (State) │  │(Messaging│  │(Location API)│  │ Setup   │   │
+│  └─────────┘  └──────────┘  └──────────────┘  └─────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -634,3 +634,4 @@ Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) par
 <p align="center">
   Desenvolvido por <a href="https://github.com/ryanbromati">ryanbromati</a>
 </p>
+
