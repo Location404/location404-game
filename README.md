@@ -75,15 +75,44 @@ O **Location404 Game Engine** é o serviço responsável por toda a lógica de j
 
 O projeto segue **Clean Architecture** com separação clara de responsabilidades:
 
-<p align="center">
-  <img src="docs/diagrams/clean-architecture.svg" alt="Arquitetura Clean Architecture" width="800"/>
-</p>
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     API Layer (SignalR)                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
+│  │  GameHub    │  │ Health       │  │  Middlewares     │   │
+│  │  (SignalR)  │  │ Checks       │  │  (CORS, Auth)    │   │
+│  └─────────────┘  └──────────────┘  └──────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                         │
+│  ┌──────────────────┐  ┌──────────────────────────────┐    │
+│  │ Command Handlers │  │  Interfaces (Contracts)      │    │
+│  │ - JoinMatchmaking│  │  - IMatchmakingService       │    │
+│  │ - StartRound     │  │  - IGameMatchManager         │    │
+│  │ - SubmitGuess    │  │  - IPlayerConnectionManager  │    │
+│  └──────────────────┘  └──────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────┘
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                      Domain Layer                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐   │
+│  │  Entities    │  │ Value Objects│  │  Domain Events  │   │
+│  │  - GameMatch │  │  - Coordinate│  │  - RoundEnded   │   │
+│  │  - GameRound │  │  - Location  │  │  - MatchEnded   │   │
+│  └──────────────┘  └──────────────┘  └─────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+                            │
+┌─────────────────────────────────────────────────────────────┐
+│                  Infrastructure Layer                        │
+│  ┌─────────┐  ┌──────────┐  ┌──────────────┐  ┌─────────┐ │
+│  │  Redis  │  │ RabbitMQ │  │  HTTP Client │  │  DI     │ │
+│  │ (State) │  │(Messaging│  │(Location API)│  │ Setup   │ │
+│  └─────────┘  └──────────┘  └──────────────┘  └─────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Fluxo de Dados
-
-<p align="center">
-  <img src="docs/diagrams/diagrama-signalr.svg" alt="Diagrama de Fluxo SignalR" width="900"/>
-</p>
 
 ```
 Frontend (SignalR Client)
