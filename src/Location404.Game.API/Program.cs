@@ -6,6 +6,7 @@ using Shared.Observability.Core;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,15 +56,10 @@ void AddSignalRWithRedis(IServiceCollection services, IConfiguration configurati
     if (redisSettings?.Enabled == true)
     {
         services.AddSignalR()
-            .AddStackExchangeRedis(options =>
+            .AddStackExchangeRedis(redisSettings.ConnectionString, options =>
             {
-                options.ConnectionFactory = writer =>
-                {
-                    var sp = services.BuildServiceProvider();
-                    var muxer = sp.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
-                    return Task.FromResult(muxer);
-                };
                 options.Configuration.ChannelPrefix = RedisChannel.Literal("SignalR");
+                options.Configuration.AllowAdmin = false;
             });
     }
     else
