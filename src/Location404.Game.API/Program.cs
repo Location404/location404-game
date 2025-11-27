@@ -68,10 +68,10 @@ void AddObservability(IServiceCollection services, IConfiguration configuration)
 
     services.AddObservabilityHealthChecks(configuration, checks =>
     {
-        var redisConnectionString = configuration["Redis:ConnectionString"];
-        if (!string.IsNullOrEmpty(redisConnectionString))
+        var redisSettings = configuration.GetSection("Redis").Get<Location404.Game.Infrastructure.Configuration.RedisSettings>();
+        if (redisSettings?.Enabled == true)
         {
-            checks.AddRedis(redisConnectionString, name: "redis", tags: new[] { "ready", "db" }, timeout: TimeSpan.FromSeconds(3));
+            checks.AddRedis(sp => sp.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>(), name: "redis", tags: new[] { "ready", "db" }, timeout: TimeSpan.FromSeconds(3));
         }
 
         var rabbitMqSettings = configuration.GetSection("RabbitMQ");
