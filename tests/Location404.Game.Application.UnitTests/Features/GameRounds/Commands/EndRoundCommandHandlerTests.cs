@@ -22,6 +22,7 @@ public class EndRoundCommandHandlerTests
     private readonly IRoundTimerService _roundTimer;
     private readonly IGameEventPublisher _eventPublisher;
     private readonly ILocation404DataClient _location404DataClient;
+    private readonly IDistributedLockService _distributedLock;
     private readonly ILogger<EndRoundCommandHandler> _logger;
     private readonly EndRoundCommandHandler _handler;
 
@@ -32,7 +33,11 @@ public class EndRoundCommandHandlerTests
         _roundTimer = Substitute.For<IRoundTimerService>();
         _eventPublisher = Substitute.For<IGameEventPublisher>();
         _location404DataClient = Substitute.For<ILocation404DataClient>();
+        _distributedLock = Substitute.For<IDistributedLockService>();
         _logger = Substitute.For<ILogger<EndRoundCommandHandler>>();
+
+        _distributedLock.AcquireLockAsync(Arg.Any<string>(), Arg.Any<TimeSpan>())
+            .Returns(Task.FromResult<IDisposable?>(Substitute.For<IDisposable>()));
 
         _handler = new EndRoundCommandHandler(
             _matchManager,
@@ -40,6 +45,7 @@ public class EndRoundCommandHandlerTests
             _roundTimer,
             _eventPublisher,
             _location404DataClient,
+            _distributedLock,
             _logger
         );
     }

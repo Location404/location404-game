@@ -14,6 +14,7 @@ public class EndRoundCommandHandler(
     IRoundTimerService roundTimer,
     IGameEventPublisher eventPublisher,
     ILocation404DataClient location404DataClient,
+    IDistributedLockService distributedLock,
     ILogger<EndRoundCommandHandler> logger
 ) : ICommandHandler<EndRoundCommand, Result<EndRoundCommandResponse>>
 {
@@ -21,6 +22,17 @@ public class EndRoundCommandHandler(
         EndRoundCommand command,
         CancellationToken cancellationToken = default)
     {
+        var lockKey = $"lock:endround:{command.MatchId}:{command.RoundId}";
+        var lockHandle = await distributedLock.AcquireLockAsync(lockKey, TimeSpan.FromSeconds(10));
+
+        if (lockHandle == null)
+        {
+            logger.LogInformation("🔒 [EndRoundHandler] Lock already held for round {RoundId}, match {MatchId}. Skipping duplicate processing.",
+                command.RoundId, command.MatchId);
+            return Result<EndRoundCommandResponse>.Success(
+                new EndRoundCommandResponse(RoundEnded: true, MatchEnded: false));
+        }
+
         try
         {
             await roundTimer.CancelTimerAsync(command.MatchId, command.RoundId);
@@ -176,6 +188,10 @@ public class EndRoundCommandHandler(
             logger.LogError(ex, "Error ending round for match {MatchId}", command.MatchId);
             return Result<EndRoundCommandResponse>.Failure(
                 new Error("EndRound.Failed", $"Error ending round: {ex.Message}", ErrorType.Failure));
+        }
+        finally
+        {
+            lockHandle?.Dispose();
         }
     }
 }

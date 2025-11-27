@@ -12,6 +12,7 @@ using Location404.Game.Infrastructure.Matchmaking;
 using Location404.Game.Infrastructure.Messaging;
 using Location404.Game.Infrastructure.ExternalServices;
 using Location404.Game.Infrastructure.HttpClients;
+using Location404.Game.Infrastructure.Common;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Extensions.Http;
@@ -75,6 +76,7 @@ public static class ServiceCollectionExtensions
             services.AddSingleton<IPlayerConnectionManager, PlayerConnectionManager>();
             services.AddSingleton<IGuessStorageManager, GuessStorageManager>();
             services.AddSingleton<IRoundTimerService, RedisRoundTimerService>();
+            services.AddSingleton<IDistributedLockService, RedisDistributedLockService>();
         }
         else
         {
