@@ -65,9 +65,14 @@ public class SubmitGuessCommandHandler(
             var isFirstGuess = (playerAGuess != null && playerBGuess == null) ||
                               (playerAGuess == null && playerBGuess != null);
 
+            bool timerAdjusted = false;
+            int? newTimerDuration = null;
+
             if (isFirstGuess)
             {
-                await HandleFirstGuessSubmittedAsync(command.MatchId, currentRoundId);
+                var adjusted = await HandleFirstGuessSubmittedAsync(command.MatchId, currentRoundId);
+                timerAdjusted = adjusted.HasValue;
+                newTimerDuration = adjusted.HasValue ? (int)adjusted.Value.TotalSeconds : null;
             }
 
             if (playerAGuess != null && playerBGuess != null)
@@ -93,13 +98,23 @@ public class SubmitGuessCommandHandler(
                     new SubmitGuessCommandResponse(
                         RoundEnded: endRoundResult.Value.RoundEnded,
                         MatchEnded: endRoundResult.Value.MatchEnded,
+                        PlayerId: command.PlayerId,
                         RoundResult: endRoundResult.Value.RoundResult,
-                        MatchResult: endRoundResult.Value.MatchResult
+                        MatchResult: endRoundResult.Value.MatchResult,
+                        TimerAdjusted: timerAdjusted,
+                        NewTimerDuration: newTimerDuration,
+                        RoundId: currentRoundId
                     ));
             }
 
             return Result<SubmitGuessCommandResponse>.Success(
-                new SubmitGuessCommandResponse(RoundEnded: false, MatchEnded: false));
+                new SubmitGuessCommandResponse(
+                    RoundEnded: false,
+                    MatchEnded: false,
+                    PlayerId: command.PlayerId,
+                    TimerAdjusted: timerAdjusted,
+                    NewTimerDuration: newTimerDuration,
+                    RoundId: currentRoundId));
         }
         catch (Exception ex)
         {
@@ -110,7 +125,7 @@ public class SubmitGuessCommandHandler(
         }
     }
 
-    private async Task HandleFirstGuessSubmittedAsync(Guid matchId, Guid roundId)
+    private async Task<TimeSpan?> HandleFirstGuessSubmittedAsync(Guid matchId, Guid roundId)
     {
         var remainingTime = await roundTimer.GetRemainingTimeAsync(matchId, roundId);
 
@@ -119,12 +134,16 @@ public class SubmitGuessCommandHandler(
             logger.LogInformation("⏱️ [Handler] Primeiro palpite detectado. Ajustando timer de {Current}s para 15s",
                 remainingTime.Value.TotalSeconds);
 
-            await roundTimer.AdjustTimerAsync(matchId, roundId, TimeSpan.FromSeconds(15));
+            var newDuration = TimeSpan.FromSeconds(15);
+            await roundTimer.AdjustTimerAsync(matchId, roundId, newDuration);
+            return newDuration;
         }
         else if (remainingTime.HasValue)
         {
             logger.LogInformation("⏱️ [Handler] Primeiro palpite detectado, mas timer já está em {Current}s (≤15s)",
                 remainingTime.Value.TotalSeconds);
         }
+
+        return null;
     }
 }

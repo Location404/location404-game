@@ -5,8 +5,12 @@ namespace Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessC
 public record SubmitGuessCommandResponse(
     bool RoundEnded,
     bool MatchEnded,
+    Guid PlayerId,
     RoundEndResult? RoundResult = null,
-    MatchEndResult? MatchResult = null
+    MatchEndResult? MatchResult = null,
+    bool TimerAdjusted = false,
+    int? NewTimerDuration = null,
+    Guid? RoundId = null
 );
 
 public record RoundEndResult(

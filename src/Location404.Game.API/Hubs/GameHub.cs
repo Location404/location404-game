@@ -194,6 +194,23 @@ public class GameHub(
 
             await Clients.Caller.SendAsync("GuessSubmitted", "Guess submitted successfully.");
 
+            await Clients.OthersInGroup(request.MatchId.ToString()).SendAsync("OpponentSubmitted", new
+            {
+                playerId = result.Value.PlayerId,
+                matchId = request.MatchId
+            });
+
+            if (result.Value.TimerAdjusted && result.Value.NewTimerDuration.HasValue && result.Value.RoundId.HasValue)
+            {
+                await Clients.Group(request.MatchId.ToString()).SendAsync("TimerAdjusted", new
+                {
+                    matchId = request.MatchId,
+                    roundId = result.Value.RoundId.Value,
+                    newDuration = result.Value.NewTimerDuration.Value,
+                    adjustedAt = DateTime.UtcNow.ToString("O")
+                });
+            }
+
             if (result.Value.RoundEnded && result.Value.RoundResult != null)
             {
                 var roundEndedResponse = RoundEndedResponse.FromRoundEndResult(result.Value.RoundResult);
