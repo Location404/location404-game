@@ -57,11 +57,13 @@ void AddSignalRWithRedis(IServiceCollection services, IConfiguration configurati
         services.AddSignalR()
             .AddStackExchangeRedis(options =>
             {
-                options.ConnectionFactory = async writer =>
+                options.ConnectionFactory = writer =>
                 {
-                    return writer.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                    var sp = services.BuildServiceProvider();
+                    var muxer = sp.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                    return Task.FromResult(muxer);
                 };
-                options.Configuration.ChannelPrefix = "SignalR";
+                options.Configuration.ChannelPrefix = RedisChannel.Literal("SignalR");
             });
     }
     else
