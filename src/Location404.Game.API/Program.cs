@@ -51,12 +51,23 @@ void AddBackgroundServices(IServiceCollection services, IConfiguration configura
 
 void AddSignalRWithRedis(IServiceCollection services, IConfiguration configuration)
 {
-    var redisConnection = configuration["Redis:ConnectionString"];
-    services.AddSignalR()
-        .AddStackExchangeRedis(redisConnection, options =>
-        {
-            options.Configuration.ChannelPrefix = "SignalR";
-        });
+    var redisSettings = configuration.GetSection("Redis").Get<Location404.Game.Infrastructure.Configuration.RedisSettings>();
+    if (redisSettings?.Enabled == true)
+    {
+        services.AddSignalR()
+            .AddStackExchangeRedis(options =>
+            {
+                options.ConnectionFactory = async writer =>
+                {
+                    return writer.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>();
+                };
+                options.Configuration.ChannelPrefix = "SignalR";
+            });
+    }
+    else
+    {
+        services.AddSignalR();
+    }
 }
 
 void AddObservability(IServiceCollection services, IConfiguration configuration)

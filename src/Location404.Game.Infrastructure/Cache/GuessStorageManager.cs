@@ -65,7 +65,10 @@ public class GuessStorageManager : IGuessStorageManager
 
         if (keys.Length > 0)
         {
-            await _db.KeyDeleteAsync(keys);
+            foreach (var key in keys)
+            {
+                await _db.KeyDeleteAsync(key);
+            }
         }
 
         // Also remove correct answer
