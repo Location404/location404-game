@@ -35,7 +35,20 @@ public class RabbitMQEventPublisherTests : IClassFixture<RabbitMQFixture>
             ExchangeName = "test-game-events"
         });
 
-        return new RabbitMQEventPublisher(settings, _logger);
+        var factory = new ConnectionFactory
+        {
+            HostName = _fixture.HostName,
+            Port = _fixture.Port,
+            UserName = _fixture.UserName,
+            Password = _fixture.Password,
+            VirtualHost = "/",
+            AutomaticRecoveryEnabled = true,
+            NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
+            RequestedHeartbeat = TimeSpan.FromSeconds(60),
+            Ssl = { Enabled = false }
+        };
+
+        return new RabbitMQEventPublisher(settings, factory, _logger);
     }
 
     [Fact]
@@ -206,7 +219,18 @@ public class RabbitMQEventPublisherTests : IClassFixture<RabbitMQFixture>
             ExchangeName = "test-game-events"
         });
 
-        using var publisher = new RabbitMQEventPublisher(settings, _logger);
+        var factory = new ConnectionFactory
+        {
+            HostName = "invalid-host-12345",
+            Port = 9999,
+            UserName = "invalid",
+            Password = "invalid",
+            VirtualHost = "/",
+            AutomaticRecoveryEnabled = true,
+            Ssl = { Enabled = false }
+        };
+
+        using var publisher = new RabbitMQEventPublisher(settings, factory, _logger);
         var @event = new GameMatchEndedEvent(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 15000, 12000, 24, 0, DateTime.UtcNow.AddMinutes(-10), DateTime.UtcNow, new List<GameRoundDto>());
 
         // Act & Assert
