@@ -16,6 +16,7 @@ using System.Text.Json;
 public class RabbitMQEventPublisher : IGameEventPublisher, IDisposable
 {
     private readonly RabbitMQSettings _settings;
+    private readonly IConnectionFactory _connectionFactory;
     private readonly ILogger<RabbitMQEventPublisher> _logger;
     private IConnection? _connection;
     private IChannel? _channel;
@@ -23,10 +24,15 @@ public class RabbitMQEventPublisher : IGameEventPublisher, IDisposable
     private readonly SemaphoreSlim _lock = new(1, 1);
     private bool _isDisposed;
 
-    public RabbitMQEventPublisher(IOptions<RabbitMQSettings> options, ILogger<RabbitMQEventPublisher> logger)
+    public RabbitMQEventPublisher(
+        IOptions<RabbitMQSettings> options,
+        IConnectionFactory connectionFactory,
+        ILogger<RabbitMQEventPublisher> logger)
     {
         ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(connectionFactory);
         _settings = options.Value;
+        _connectionFactory = connectionFactory;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         _jsonOptions = new JsonSerializerOptions
@@ -51,21 +57,7 @@ public class RabbitMQEventPublisher : IGameEventPublisher, IDisposable
 
             _logger.LogInformation("Connecting to RabbitMQ at {HostName}:{Port}", _settings.HostName, _settings.Port);
 
-            var factory = new ConnectionFactory
-            {
-                HostName = _settings.HostName,
-                Port = _settings.Port,
-                UserName = _settings.UserName,
-                Password = _settings.Password,
-                VirtualHost = _settings.VirtualHost,
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
-                RequestedHeartbeat = TimeSpan.FromSeconds(60)
-            };
-
-            factory.Ssl.Enabled = false;
-
-            _connection = await factory.CreateConnectionAsync(cancellationToken);
+            _connection = await _connectionFactory.CreateConnectionAsync(cancellationToken);
             _channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
             await _channel.ExchangeDeclareAsync(

@@ -118,6 +118,23 @@ public static class ServiceCollectionExtensions
         // Use mock if RabbitMQ is disabled or in development without RabbitMQ
         if (rabbitSettings.Enabled)
         {
+            services.AddSingleton<RabbitMQ.Client.IConnectionFactory>(sp =>
+            {
+                var settings = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMQSettings>>().Value;
+                return new RabbitMQ.Client.ConnectionFactory
+                {
+                    HostName = settings.HostName,
+                    Port = settings.Port,
+                    UserName = settings.UserName,
+                    Password = settings.Password,
+                    VirtualHost = settings.VirtualHost,
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(10),
+                    RequestedHeartbeat = TimeSpan.FromSeconds(60),
+                    Ssl = { Enabled = false }
+                };
+            });
+
             services.AddSingleton<IGameEventPublisher, RabbitMQEventPublisher>();
         }
         else

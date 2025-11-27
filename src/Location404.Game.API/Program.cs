@@ -74,21 +74,13 @@ void AddObservability(IServiceCollection services, IConfiguration configuration)
             checks.AddRedis(sp => sp.GetRequiredService<StackExchange.Redis.IConnectionMultiplexer>(), name: "redis", tags: new[] { "ready", "db" }, timeout: TimeSpan.FromSeconds(3));
         }
 
-        var rabbitMqSettings = configuration.GetSection("RabbitMQ");
-        var rabbitHost = rabbitMqSettings["HostName"];
-        var rabbitPort = rabbitMqSettings.GetValue<int>("Port");
-        var rabbitUser = rabbitMqSettings["UserName"];
-        var rabbitPass = rabbitMqSettings["Password"];
-        var rabbitVHost = rabbitMqSettings["VirtualHost"];
-
-        if (!string.IsNullOrEmpty(rabbitHost))
+        var rabbitSettings = configuration.GetSection("RabbitMQ").Get<Location404.Game.Infrastructure.Configuration.RabbitMQSettings>();
+        if (rabbitSettings?.Enabled == true)
         {
-            var connectionString = $"amqp://{rabbitUser}:{rabbitPass}@{rabbitHost}:{rabbitPort}/{rabbitVHost}";
             checks.AddRabbitMQ(sp =>
             {
-                var factory = new RabbitMQ.Client.ConnectionFactory();
-                factory.Uri = new Uri(connectionString);
-                return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+                var factory = sp.GetRequiredService<RabbitMQ.Client.IConnectionFactory>();
+                return factory.CreateConnectionAsync();
             }, name: "rabbitmq", tags: new[] { "ready", "messaging" }, timeout: TimeSpan.FromSeconds(3));
         }
     });
