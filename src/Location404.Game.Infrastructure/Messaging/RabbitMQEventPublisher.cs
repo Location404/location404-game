@@ -160,8 +160,6 @@ public class RabbitMQEventPublisher : IGameEventPublisher, IDisposable
                 throw new InvalidOperationException($"Failed to publish event to RabbitMQ: {ex.Message}", ex);
             }
         }
-
-        throw new InvalidOperationException($"Failed to publish event after {maxRetries} retries");
     }
 
     public void Dispose()
