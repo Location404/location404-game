@@ -39,10 +39,10 @@ public class EndRoundCommandHandler(
 
             logger.LogInformation("✅ [EndRoundHandler] Finalizando rodada {RoundId} para match {MatchId}",
                 command.RoundId, command.MatchId);
-            logger.LogInformation("📍 [EndRoundHandler] PlayerA Guess: X={PlayerAX} (Lat), Y={PlayerAY} (Lng)",
-                command.PlayerAGuess.X, command.PlayerAGuess.Y);
-            logger.LogInformation("📍 [EndRoundHandler] PlayerB Guess: X={PlayerBX} (Lat), Y={PlayerBY} (Lng)",
-                command.PlayerBGuess.X, command.PlayerBGuess.Y);
+            logger.LogInformation("📍 [EndRoundHandler] PlayerA Guess: {PlayerAGuess}",
+                command.PlayerAGuess != null ? $"X={command.PlayerAGuess.X} (Lat), Y={command.PlayerAGuess.Y} (Lng)" : "NULL");
+            logger.LogInformation("📍 [EndRoundHandler] PlayerB Guess: {PlayerBGuess}",
+                command.PlayerBGuess != null ? $"X={command.PlayerBGuess.X} (Lat), Y={command.PlayerBGuess.Y} (Lng)" : "NULL");
 
             var match = await matchManager.GetMatchAsync(command.MatchId);
 
@@ -94,6 +94,7 @@ public class EndRoundCommandHandler(
 
             var endedRound = match.GameRounds.Last();
             var roundResult = new RoundEndResult(
+                MatchId: match.Id,
                 RoundId: endedRound.Id,
                 RoundNumber: match.GameRounds.Count,
                 CorrectLocation: gameResponse,
@@ -101,13 +102,13 @@ public class EndRoundCommandHandler(
                     PlayerId: match.PlayerAId,
                     Guess: command.PlayerAGuess,
                     Points: endedRound.PlayerAPoints ?? 0,
-                    DistanceInKm: gameResponse.CalculateDistance(command.PlayerAGuess)
+                    DistanceInKm: command.PlayerAGuess != null ? gameResponse.CalculateDistance(command.PlayerAGuess) : 0
                 ),
                 PlayerB: new PlayerGuessResult(
                     PlayerId: match.PlayerBId,
                     Guess: command.PlayerBGuess,
                     Points: endedRound.PlayerBPoints ?? 0,
-                    DistanceInKm: gameResponse.CalculateDistance(command.PlayerBGuess)
+                    DistanceInKm: command.PlayerBGuess != null ? gameResponse.CalculateDistance(command.PlayerBGuess) : 0
                 ),
                 PlayerATotalPoints: match.PlayerATotalPoints ?? 0,
                 PlayerBTotalPoints: match.PlayerBTotalPoints ?? 0

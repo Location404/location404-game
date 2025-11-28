@@ -151,6 +151,7 @@ public class SubmitGuessCommandHandlerTests
             RoundEnded: true,
             MatchEnded: false,
             RoundResult: new RoundEndResult(
+                MatchId: match.Id,
                 RoundId: roundId,
                 RoundNumber: 1,
                 CorrectLocation: correctLocation,
@@ -232,6 +233,7 @@ public class SubmitGuessCommandHandlerTests
             RoundEnded: true,
             MatchEnded: true,
             RoundResult: new RoundEndResult(
+                MatchId: match.Id,
                 RoundId: finalRoundId,
                 RoundNumber: 4,
                 CorrectLocation: locations[2],

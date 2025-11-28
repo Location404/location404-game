@@ -47,12 +47,12 @@ public record RoundEndedResponse(
             : (Guid?)null;
 
         return new RoundEndedResponse(
-            Guid.Empty,
+            result.MatchId,
             result.RoundId,
             result.RoundNumber,
             CoordinateDto.FromEntity(result.CorrectLocation),
-            CoordinateDto.FromEntity(result.PlayerA.Guess),
-            CoordinateDto.FromEntity(result.PlayerB.Guess),
+            result.PlayerA.Guess != null ? CoordinateDto.FromEntity(result.PlayerA.Guess) : null,
+            result.PlayerB.Guess != null ? CoordinateDto.FromEntity(result.PlayerB.Guess) : null,
             result.PlayerA.Points,
             result.PlayerB.Points,
             result.PlayerATotalPoints,

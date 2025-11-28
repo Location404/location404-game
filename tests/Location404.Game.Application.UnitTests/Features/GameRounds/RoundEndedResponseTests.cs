@@ -116,6 +116,7 @@ public class RoundEndedResponseTests
     public void FromRoundEndResult_ShouldMapAllPropertiesCorrectly()
     {
         // Arrange
+        var matchId = Guid.NewGuid();
         var roundId = Guid.NewGuid();
         var playerAId = Guid.NewGuid();
         var playerBId = Guid.NewGuid();
@@ -124,6 +125,7 @@ public class RoundEndedResponseTests
         var playerBGuess = new Coordinate(x: -23.5500, y: -46.6330);
 
         var result = new RoundEndResult(
+            MatchId: matchId,
             RoundId: roundId,
             RoundNumber: 2,
             CorrectLocation: correctLocation,
@@ -137,6 +139,7 @@ public class RoundEndedResponseTests
         var response = RoundEndedResponse.FromRoundEndResult(result);
 
         // Assert
+        Assert.Equal(matchId, response.MatchId);
         Assert.Equal(roundId, response.RoundId);
         Assert.Equal(2, response.RoundNumber);
         Assert.NotNull(response.CorrectAnswer);
@@ -155,6 +158,7 @@ public class RoundEndedResponseTests
         var playerAId = Guid.NewGuid();
         var playerBId = Guid.NewGuid();
         var result = new RoundEndResult(
+            MatchId: Guid.NewGuid(),
             RoundId: Guid.NewGuid(),
             RoundNumber: 1,
             CorrectLocation: new Coordinate(x: 0, y: 0),
@@ -178,6 +182,7 @@ public class RoundEndedResponseTests
         var playerAId = Guid.NewGuid();
         var playerBId = Guid.NewGuid();
         var result = new RoundEndResult(
+            MatchId: Guid.NewGuid(),
             RoundId: Guid.NewGuid(),
             RoundNumber: 1,
             CorrectLocation: new Coordinate(x: 0, y: 0),
@@ -192,26 +197,5 @@ public class RoundEndedResponseTests
 
         // Assert
         Assert.Null(response.RoundWinnerId);
-    }
-
-    [Fact]
-    public void FromRoundEndResult_ShouldSetMatchIdToEmpty()
-    {
-        // Arrange
-        var result = new RoundEndResult(
-            RoundId: Guid.NewGuid(),
-            RoundNumber: 1,
-            CorrectLocation: new Coordinate(x: 0, y: 0),
-            PlayerA: new PlayerGuessResult(Guid.NewGuid(), new Coordinate(x: 0, y: 0), 5000, 0.0),
-            PlayerB: new PlayerGuessResult(Guid.NewGuid(), new Coordinate(x: 0, y: 0), 5000, 0.0),
-            PlayerATotalPoints: 5000,
-            PlayerBTotalPoints: 5000
-        );
-
-        // Act
-        var response = RoundEndedResponse.FromRoundEndResult(result);
-
-        // Assert
-        Assert.Equal(Guid.Empty, response.MatchId);
     }
 }

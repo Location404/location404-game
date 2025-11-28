@@ -14,6 +14,7 @@ public record SubmitGuessCommandResponse(
 );
 
 public record RoundEndResult(
+    Guid MatchId,
     Guid RoundId,
     int RoundNumber,
     Coordinate CorrectLocation,
@@ -25,7 +26,7 @@ public record RoundEndResult(
 
 public record PlayerGuessResult(
     Guid PlayerId,
-    Coordinate Guess,
+    Coordinate? Guess,
     int Points,
     double DistanceInKm
 );
