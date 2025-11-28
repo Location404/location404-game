@@ -7,12 +7,12 @@ namespace Location404.Game.Application.Features.GameRounds.Commands.EndRoundComm
 public class EndRoundCommand(
     Guid MatchId,
     Guid RoundId,
-    Coordinate PlayerAGuess,
-    Coordinate PlayerBGuess
+    Coordinate? PlayerAGuess,
+    Coordinate? PlayerBGuess
 ) : ICommand<Result<EndRoundCommandResponse>>
 {
     public Guid MatchId { get; } = MatchId;
     public Guid RoundId { get; } = RoundId;
-    public Coordinate PlayerAGuess { get; } = PlayerAGuess;
-    public Coordinate PlayerBGuess { get; } = PlayerBGuess;
+    public Coordinate? PlayerAGuess { get; } = PlayerAGuess;
+    public Coordinate? PlayerBGuess { get; } = PlayerBGuess;
 }

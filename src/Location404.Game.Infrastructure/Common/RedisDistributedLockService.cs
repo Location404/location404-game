@@ -26,7 +26,7 @@ public class RedisDistributedLockService(
         return new RedisLock(_db, key, lockValue, logger);
     }
 
-    private class RedisLock : IDisposable
+    private sealed class RedisLock : IDisposable
     {
         private readonly IDatabase _db;
         private readonly string _key;
@@ -44,9 +44,23 @@ public class RedisDistributedLockService(
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (_disposed) return;
             _disposed = true;
 
+            if (disposing)
+            {
+                ReleaseLock();
+            }
+        }
+
+        private void ReleaseLock()
+        {
             var lockScript = @"
                 if redis.call('get', KEYS[1]) == ARGV[1] then
                     return redis.call('del', KEYS[1])
@@ -63,6 +77,11 @@ public class RedisDistributedLockService(
             {
                 _logger.LogWarning(ex, "Failed to release lock: {Key}", _key);
             }
+        }
+
+        ~RedisLock()
+        {
+            Dispose(false);
         }
     }
 }
