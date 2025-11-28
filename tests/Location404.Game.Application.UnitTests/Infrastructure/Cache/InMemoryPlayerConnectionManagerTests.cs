@@ -80,10 +80,10 @@ public class InMemoryPlayerConnectionManagerTests
         var playerId = Guid.NewGuid();
 
         // Act
-        var act = async () => await manager.RemoveMappingAsync(playerId);
+        var exception = await Record.ExceptionAsync(async () => await manager.RemoveMappingAsync(playerId));
 
         // Assert
-        await act.Should().NotThrowAsync();
+        Assert.Null(exception);
     }
 
     [Fact]

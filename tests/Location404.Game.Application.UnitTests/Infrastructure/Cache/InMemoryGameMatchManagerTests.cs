@@ -165,10 +165,10 @@ public class InMemoryGameMatchManagerTests
         var matchId = Guid.NewGuid();
 
         // Act
-        var act = async () => await manager.RemoveMatchAsync(matchId);
+        var exception = await Record.ExceptionAsync(async () => await manager.RemoveMatchAsync(matchId));
 
         // Assert
-        await act.Should().NotThrowAsync();
+        Assert.Null(exception);
     }
 
     [Fact]
