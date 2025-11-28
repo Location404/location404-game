@@ -42,7 +42,7 @@ public class SubmitGuessCommandHandler(
 
             var currentRoundId = match.CurrentGameRound.Id;
 
-            logger.LogInformation("📥 [Handler] Palpite recebido de {PlayerId}: X={X} (Lat), Y={Y} (Lng)",
+            logger.LogInformation("[Handler] Palpite recebido de {PlayerId}: X={X} (Lat), Y={Y} (Lng)",
                 command.PlayerId, command.Guess.X, command.Guess.Y);
 
             await guessStorage.StoreGuessAsync(
@@ -52,7 +52,7 @@ public class SubmitGuessCommandHandler(
                 command.Guess
             );
 
-            logger.LogInformation("✅ [Handler] Palpite armazenado para player {PlayerId}",
+            logger.LogInformation("[Handler] Palpite armazenado para player {PlayerId}",
                 command.PlayerId);
 
             var (playerAGuess, playerBGuess) = await guessStorage.GetBothGuessesAsync(
@@ -77,7 +77,7 @@ public class SubmitGuessCommandHandler(
 
             if (playerAGuess != null && playerBGuess != null)
             {
-                logger.LogInformation("✅ [Handler] Ambos jogadores enviaram palpites para match {MatchId}. Delegando para EndRoundCommand...",
+                logger.LogInformation("[Handler] Ambos jogadores enviaram palpites para match {MatchId}. Delegando para EndRoundCommand...",
                     command.MatchId);
 
                 var endRoundCommand = new EndRoundCommand.EndRoundCommand(
@@ -131,7 +131,7 @@ public class SubmitGuessCommandHandler(
 
         if (remainingTime.HasValue && remainingTime.Value.TotalSeconds > 15)
         {
-            logger.LogInformation("⏱️ [Handler] Primeiro palpite detectado. Ajustando timer de {Current}s para 15s",
+            logger.LogInformation("[Handler] Primeiro palpite detectado. Ajustando timer de {Current}s para 15s",
                 remainingTime.Value.TotalSeconds);
 
             var newDuration = TimeSpan.FromSeconds(15);
@@ -140,7 +140,7 @@ public class SubmitGuessCommandHandler(
         }
         else if (remainingTime.HasValue)
         {
-            logger.LogInformation("⏱️ [Handler] Primeiro palpite detectado, mas timer já está em {Current}s (≤15s)",
+            logger.LogInformation("[Handler] Primeiro palpite detectado, mas timer já está em {Current}s (≤15s)",
                 remainingTime.Value.TotalSeconds);
         }
 
