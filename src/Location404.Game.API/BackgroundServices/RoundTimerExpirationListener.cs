@@ -140,8 +140,8 @@ public class RoundTimerExpirationListener : BackgroundService
             var endRoundCommand = new EndRoundCommand(
                 MatchId: matchId,
                 RoundId: roundId,
-                PlayerAGuess: playerAGuess ?? gameResponse,
-                PlayerBGuess: playerBGuess ?? gameResponse
+                PlayerAGuess: playerAGuess,
+                PlayerBGuess: playerBGuess
             );
 
             var result = await endRoundHandler.HandleAsync(endRoundCommand);
