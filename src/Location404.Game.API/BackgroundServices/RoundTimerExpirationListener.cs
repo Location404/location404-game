@@ -99,34 +99,14 @@ public class RoundTimerExpirationListener : BackgroundService
         try
         {
             var match = await matchManager.GetMatchAsync(matchId);
-
-            if (match == null)
-            {
-                _logger.LogWarning("[ForceRoundEnd] Match {MatchId} not found", matchId);
+            if (!ValidateMatch(match, matchId, roundId))
                 return;
-            }
 
-            if (match.CurrentGameRound == null || match.CurrentGameRound.Id != roundId)
-            {
-                _logger.LogInformation("[ForceRoundEnd] Round {RoundId} already ended for match {MatchId}", roundId, matchId);
+            var (playerAGuess, playerBGuess) = await guessStorage.GetBothGuessesAsync(matchId, roundId, match!.PlayerAId, match.PlayerBId);
+            if (ShouldSkipForceEnd(playerAGuess, playerBGuess, matchId, roundId))
                 return;
-            }
-
-            var (playerAGuess, playerBGuess) = await guessStorage.GetBothGuessesAsync(
-                matchId,
-                roundId,
-                match.PlayerAId,
-                match.PlayerBId
-            );
-
-            if (playerAGuess != null && playerBGuess != null)
-            {
-                _logger.LogInformation("[ForceRoundEnd] Both players submitted for match {MatchId}, round {RoundId}. Skipping force end.", matchId, roundId);
-                return;
-            }
 
             var gameResponse = await guessStorage.GetCorrectAnswerAsync(matchId, roundId);
-
             if (gameResponse == null)
             {
                 _logger.LogError("[ForceRoundEnd] Correct answer not found for match {MatchId}, round {RoundId}", matchId, roundId);
@@ -137,44 +117,72 @@ public class RoundTimerExpirationListener : BackgroundService
                 playerAGuess == null ? "NULL" : "SUBMITTED",
                 playerBGuess == null ? "NULL" : "SUBMITTED");
 
-            var endRoundCommand = new EndRoundCommand(
-                MatchId: matchId,
-                RoundId: roundId,
-                PlayerAGuess: playerAGuess,
-                PlayerBGuess: playerBGuess
-            );
-
-            var result = await endRoundHandler.HandleAsync(endRoundCommand);
-
+            var result = await endRoundHandler.HandleAsync(new EndRoundCommand(matchId, roundId, playerAGuess, playerBGuess));
             if (result.IsFailure)
             {
                 _logger.LogError("[ForceRoundEnd] Failed to end round: {Error}", result.Error.Message);
                 return;
             }
 
-            if (result.Value.RoundEnded && result.Value.RoundResult != null)
-            {
-                var roundEndedResponse = RoundEndedResponse.FromRoundEndResult(result.Value.RoundResult);
-                await hubContext.Clients.Group(matchId.ToString()).SendAsync("RoundEnded", roundEndedResponse);
-
-                _logger.LogInformation("[ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
-                    result.Value.RoundResult.RoundNumber, matchId,
-                    result.Value.RoundResult.PlayerATotalPoints,
-                    result.Value.RoundResult.PlayerBTotalPoints);
-            }
-
-            if (result.Value.MatchEnded && result.Value.MatchResult != null)
-            {
-                var matchEndedResponse = MatchEndedResponse.FromMatchEndResult(result.Value.MatchResult);
-                await hubContext.Clients.Group(matchId.ToString()).SendAsync("MatchEnded", matchEndedResponse);
-
-                _logger.LogInformation("[ForceRoundEnd] Match {MatchId} ended. Winner: {WinnerId}",
-                    matchId, result.Value.MatchResult.WinnerId);
-            }
+            await NotifyRoundEndedAsync(hubContext, matchId, result.Value);
+            await NotifyMatchEndedAsync(hubContext, matchId, result.Value);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "[ForceRoundEnd] Error force-ending round for match {MatchId}, round {RoundId}", matchId, roundId);
+        }
+    }
+
+    private bool ValidateMatch(GameMatch? match, Guid matchId, Guid roundId)
+    {
+        if (match == null)
+        {
+            _logger.LogWarning("[ForceRoundEnd] Match {MatchId} not found", matchId);
+            return false;
+        }
+
+        if (match.CurrentGameRound == null || match.CurrentGameRound.Id != roundId)
+        {
+            _logger.LogInformation("[ForceRoundEnd] Round {RoundId} already ended for match {MatchId}", roundId, matchId);
+            return false;
+        }
+
+        return true;
+    }
+
+    private bool ShouldSkipForceEnd(Coordinate? playerAGuess, Coordinate? playerBGuess, Guid matchId, Guid roundId)
+    {
+        if (playerAGuess != null && playerBGuess != null)
+        {
+            _logger.LogInformation("[ForceRoundEnd] Both players submitted for match {MatchId}, round {RoundId}. Skipping force end.", matchId, roundId);
+            return true;
+        }
+        return false;
+    }
+
+    private async Task NotifyRoundEndedAsync(IHubContext<GameHub> hubContext, Guid matchId, EndRoundCommandResponse response)
+    {
+        if (response.RoundEnded && response.RoundResult != null)
+        {
+            var roundEndedResponse = RoundEndedResponse.FromRoundEndResult(response.RoundResult);
+            await hubContext.Clients.Group(matchId.ToString()).SendAsync("RoundEnded", roundEndedResponse);
+
+            _logger.LogInformation("[ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
+                response.RoundResult.RoundNumber, matchId,
+                response.RoundResult.PlayerATotalPoints,
+                response.RoundResult.PlayerBTotalPoints);
+        }
+    }
+
+    private async Task NotifyMatchEndedAsync(IHubContext<GameHub> hubContext, Guid matchId, EndRoundCommandResponse response)
+    {
+        if (response.MatchEnded && response.MatchResult != null)
+        {
+            var matchEndedResponse = MatchEndedResponse.FromMatchEndResult(response.MatchResult);
+            await hubContext.Clients.Group(matchId.ToString()).SendAsync("MatchEnded", matchEndedResponse);
+
+            _logger.LogInformation("[ForceRoundEnd] Match {MatchId} ended. Winner: {WinnerId}",
+                matchId, response.MatchResult.WinnerId);
         }
     }
 
