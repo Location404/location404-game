@@ -79,8 +79,11 @@ public class InMemoryPlayerConnectionManagerTests
         var manager = new InMemoryPlayerConnectionManager();
         var playerId = Guid.NewGuid();
 
-        // Act & Assert
-        await manager.RemoveMappingAsync(playerId);
+        // Act
+        var act = async () => await manager.RemoveMappingAsync(playerId);
+
+        // Assert
+        await act.Should().NotThrowAsync();
     }
 
     [Fact]

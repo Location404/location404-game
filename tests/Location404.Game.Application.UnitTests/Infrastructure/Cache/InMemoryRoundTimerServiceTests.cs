@@ -66,8 +66,11 @@ public class InMemoryRoundTimerServiceTests
         var matchId = Guid.NewGuid();
         var roundId = Guid.NewGuid();
 
-        // Act & Assert (should not throw)
-        await service.CancelTimerAsync(matchId, roundId);
+        // Act
+        var act = async () => await service.CancelTimerAsync(matchId, roundId);
+
+        // Assert
+        await act.Should().NotThrowAsync();
     }
 
     [Fact]

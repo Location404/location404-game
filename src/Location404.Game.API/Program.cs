@@ -135,22 +135,24 @@ void AddJwtAuthentication(IServiceCollection services, IConfiguration configurat
 
             options.Events = new JwtBearerEvents
             {
-                OnMessageReceived = context =>
-                {
-                    var accessToken = context.Request.Query["access_token"];
-                    var path = context.HttpContext.Request.Path;
-
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/gamehub"))
-                    {
-                        context.Token = accessToken;
-                    }
-                    else
-                    {
-                        context.Token = context.Request.Cookies["accessToken"];
-                    }
-
-                    return Task.CompletedTask;
-                }
+                OnMessageReceived = ConfigureTokenReception
             };
         });
+}
+
+Task ConfigureTokenReception(MessageReceivedContext context)
+{
+    var accessToken = context.Request.Query["access_token"];
+    var path = context.HttpContext.Request.Path;
+
+    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/gamehub"))
+    {
+        context.Token = accessToken;
+    }
+    else
+    {
+        context.Token = context.Request.Cookies["accessToken"];
+    }
+
+    return Task.CompletedTask;
 }

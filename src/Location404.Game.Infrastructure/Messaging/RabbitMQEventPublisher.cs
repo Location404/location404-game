@@ -139,29 +139,16 @@ public class RabbitMQEventPublisher : IGameEventPublisher, IDisposable
 
                 return;
             }
-            catch (AlreadyClosedException ex)
+            catch (Exception ex) when (ex is AlreadyClosedException or BrokerUnreachableException)
             {
                 retryCount++;
-                _logger.LogWarning(ex, "RabbitMQ connection closed. Retry {RetryCount}/{MaxRetries}", retryCount, maxRetries);
+                var errorType = ex is AlreadyClosedException ? "connection closed" : "broker unreachable";
+                _logger.LogWarning(ex, "RabbitMQ {ErrorType}. Retry {RetryCount}/{MaxRetries}", errorType, retryCount, maxRetries);
 
                 if (retryCount >= maxRetries)
                 {
                     _logger.LogError(ex, "Failed to publish event after {MaxRetries} retries", maxRetries);
                     throw new InvalidOperationException($"Failed to publish event to RabbitMQ after {maxRetries} retries", ex);
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));
-                await EnsureConnectionAsync();
-            }
-            catch (BrokerUnreachableException ex)
-            {
-                retryCount++;
-                _logger.LogWarning(ex, "RabbitMQ broker is unreachable. Retry {RetryCount}/{MaxRetries}", retryCount, maxRetries);
-
-                if (retryCount >= maxRetries)
-                {
-                    _logger.LogError(ex, "Failed to publish event after {MaxRetries} retries - broker unreachable", maxRetries);
-                    throw new InvalidOperationException($"Cannot publish event - RabbitMQ is unreachable at {_settings.HostName}:{_settings.Port}", ex);
                 }
 
                 await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, retryCount)));

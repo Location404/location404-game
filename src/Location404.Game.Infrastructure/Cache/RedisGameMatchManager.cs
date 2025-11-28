@@ -10,14 +10,12 @@ namespace Location404.Game.Infrastructure.Cache;
 
 public class RedisGameMatchManager : IGameMatchManager
 {
-    private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _db;
     private readonly ILogger<RedisGameMatchManager> _logger;
     private readonly TimeSpan _matchExpiration = TimeSpan.FromHours(2);
 
     public RedisGameMatchManager(IConnectionMultiplexer redis, ILogger<RedisGameMatchManager> logger)
     {
-        _redis = redis;
         _db = redis.GetDatabase();
         _logger = logger;
     }
