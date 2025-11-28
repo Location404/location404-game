@@ -57,11 +57,10 @@ public class RedisGameMatchManager : IGameMatchManager
     {
         var key = GetMatchKey(matchId);
         var json = await _db.StringGetAsync(key);
-        
-        if (json.IsNullOrEmpty)
-            return null;
-        
-        return GameMatchSerializer.Deserialize(json!);
+
+        return json.IsNullOrEmpty 
+            ? null 
+            : GameMatchSerializer.Deserialize(json!);
     }
 
     public async Task<GameMatch?> GetPlayerCurrentMatchAsync(Guid playerId)

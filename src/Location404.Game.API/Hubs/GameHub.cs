@@ -9,24 +9,22 @@ using Location404.Game.Application.Common.Result;
 using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Features.GameRounds.Interfaces;
 using Location404.Game.Application.Features.Matchmaking.Interfaces;
-using Location404.Game.Application.Features.GameRounds;
-using Location404.Game.Application.Events;
-using Location404.Game.Domain.Entities;
+
 using Shared.Observability.Core;
-using JoinMatchmakingCommand = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommand;
-using JoinMatchmakingCommandResponse = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommandResponse;
-using JoinMatchmakingRequest = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingRequest;
-using MatchFoundResponse = Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.MatchFoundResponse;
-using StartRoundCommand = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommand;
-using StartRoundCommandResponse = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommandResponse;
-using StartRoundRequest = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundRequest;
-using RoundStartedResponse = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.RoundStartedResponse;
-using LocationData = Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand.LocationData;
-using SubmitGuessCommand = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommand;
-using SubmitGuessCommandResponse = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommandResponse;
-using SubmitGuessRequest = Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessRequest;
-using RoundEndedResponse = Location404.Game.Application.Features.GameRounds.RoundEndedResponse;
-using MatchEndedResponse = Location404.Game.Application.Features.GameRounds.MatchEndedResponse;
+using JoinMatchmakingCommand = Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommand;
+using JoinMatchmakingCommandResponse = Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingCommandResponse;
+using JoinMatchmakingRequest = Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.JoinMatchmakingRequest;
+using MatchFoundResponse = Application.Features.Matchmaking.Commands.JoinMatchmakingCommand.MatchFoundResponse;
+using StartRoundCommand = Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommand;
+using StartRoundCommandResponse = Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundCommandResponse;
+using StartRoundRequest = Application.Features.GameRounds.Commands.StartRoundCommand.StartRoundRequest;
+using RoundStartedResponse = Application.Features.GameRounds.Commands.StartRoundCommand.RoundStartedResponse;
+using LocationData = Application.Features.GameRounds.Commands.StartRoundCommand.LocationData;
+using SubmitGuessCommand = Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommand;
+using SubmitGuessCommandResponse = Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessCommandResponse;
+using SubmitGuessRequest = Application.Features.GameRounds.Commands.SubmitGuessCommand.SubmitGuessRequest;
+using RoundEndedResponse = Application.Features.GameRounds.RoundEndedResponse;
+using MatchEndedResponse = Application.Features.GameRounds.MatchEndedResponse;
 
 [Authorize]
 public class GameHub(
@@ -301,82 +299,6 @@ public class GameHub(
             return Guid.Empty;
 
         return Guid.TryParse(playerIdClaim, out var playerId) ? playerId : Guid.Empty;
-    }
-
-    private static readonly Random _random = new Random();
-
-    private LocationData GenerateRandomLocation()
-    {
-        var locations = new[]
-        {
-            new { X = -23.5505, Y = -46.6333, Name = "São Paulo, Brazil" },
-            new { X = -22.9068, Y = -43.1729, Name = "Rio de Janeiro, Brazil" },
-            new { X = -15.7942, Y = -47.8822, Name = "Brasília, Brazil" },
-            new { X = -12.9714, Y = -38.5014, Name = "Salvador, Brazil" },
-            new { X = -3.1190, Y = -60.0217, Name = "Manaus, Brazil" },
-            new { X = -25.4284, Y = -49.2733, Name = "Curitiba, Brazil" },
-            new { X = -34.6037, Y = -58.3816, Name = "Buenos Aires, Argentina" },
-            new { X = -33.4489, Y = -70.6693, Name = "Santiago, Chile" },
-            new { X = -12.0464, Y = -77.0428, Name = "Lima, Peru" },
-            new { X = 4.7110, Y = -74.0721, Name = "Bogotá, Colombia" },
-            new { X = 40.7580, Y = -73.9855, Name = "New York, USA" },
-            new { X = 37.7749, Y = -122.4194, Name = "San Francisco, USA" },
-            new { X = 34.0522, Y = -118.2437, Name = "Los Angeles, USA" },
-            new { X = 41.8781, Y = -87.6298, Name = "Chicago, USA" },
-            new { X = 25.7617, Y = -80.1918, Name = "Miami, USA" },
-            new { X = 47.6062, Y = -122.3321, Name = "Seattle, USA" },
-            new { X = 19.4326, Y = -99.1332, Name = "Mexico City, Mexico" },
-            new { X = 43.6532, Y = -79.3832, Name = "Toronto, Canada" },
-            new { X = 49.2827, Y = -123.1207, Name = "Vancouver, Canada" },
-            new { X = 48.8566, Y = 2.3522, Name = "Paris, France" },
-            new { X = 51.5074, Y = -0.1278, Name = "London, UK" },
-            new { X = 52.3676, Y = 4.9041, Name = "Amsterdam, Netherlands" },
-            new { X = 50.8503, Y = 4.3517, Name = "Brussels, Belgium" },
-            new { X = 41.3851, Y = 2.1734, Name = "Barcelona, Spain" },
-            new { X = 40.4168, Y = -3.7038, Name = "Madrid, Spain" },
-            new { X = 38.7223, Y = -9.1393, Name = "Lisbon, Portugal" },
-            new { X = 41.9028, Y = 12.4964, Name = "Rome, Italy" },
-            new { X = 52.5200, Y = 13.4050, Name = "Berlin, Germany" },
-            new { X = 48.2082, Y = 16.3738, Name = "Vienna, Austria" },
-            new { X = 50.0755, Y = 14.4378, Name = "Prague, Czech Republic" },
-            new { X = 59.3293, Y = 18.0686, Name = "Stockholm, Sweden" },
-            new { X = 55.6761, Y = 12.5683, Name = "Copenhagen, Denmark" },
-            new { X = 52.2297, Y = 21.0122, Name = "Warsaw, Poland" },
-            new { X = 37.9838, Y = 23.7275, Name = "Athens, Greece" },
-            new { X = 41.0082, Y = 28.9784, Name = "Istanbul, Turkey" },
-            new { X = 55.7558, Y = 37.6173, Name = "Moscow, Russia" },
-            new { X = 35.6762, Y = 139.6503, Name = "Tokyo, Japan" },
-            new { X = 37.5665, Y = 126.9780, Name = "Seoul, South Korea" },
-            new { X = 39.9042, Y = 116.4074, Name = "Beijing, China" },
-            new { X = 31.2304, Y = 121.4737, Name = "Shanghai, China" },
-            new { X = 22.3193, Y = 114.1694, Name = "Hong Kong" },
-            new { X = 25.0330, Y = 121.5654, Name = "Taipei, Taiwan" },
-            new { X = 1.3521, Y = 103.8198, Name = "Singapore" },
-            new { X = 13.7563, Y = 100.5018, Name = "Bangkok, Thailand" },
-            new { X = -6.2088, Y = 106.8456, Name = "Jakarta, Indonesia" },
-            new { X = 14.5995, Y = 120.9842, Name = "Manila, Philippines" },
-            new { X = 21.0285, Y = 105.8542, Name = "Hanoi, Vietnam" },
-            new { X = 28.6139, Y = 77.2090, Name = "New Delhi, India" },
-            new { X = 19.0760, Y = 72.8777, Name = "Mumbai, India" },
-            new { X = 25.2048, Y = 55.2708, Name = "Dubai, UAE" },
-            new { X = 33.8938, Y = 35.5018, Name = "Beirut, Lebanon" },
-            new { X = 30.0444, Y = 31.2357, Name = "Cairo, Egypt" },
-            new { X = -26.2041, Y = 28.0473, Name = "Johannesburg, South Africa" },
-            new { X = -33.9249, Y = 18.4241, Name = "Cape Town, South Africa" },
-            new { X = -1.2921, Y = 36.8219, Name = "Nairobi, Kenya" },
-            new { X = -33.8688, Y = 151.2093, Name = "Sydney, Australia" },
-            new { X = -37.8136, Y = 144.9631, Name = "Melbourne, Australia" },
-            new { X = -41.2865, Y = 174.7762, Name = "Wellington, New Zealand" },
-        };
-
-        var location = locations[_random.Next(locations.Length)];
-        var heading = _random.Next(0, 360);
-        var pitch = _random.Next(-10, 10);
-
-        _logger.LogInformation("Generated location: {Name} (X:{X}, Y:{Y}, Heading:{Heading}°)",
-            location.Name, location.X, location.Y, heading);
-
-        return new LocationData(location.X, location.Y, heading, pitch);
     }
 
     #endregion

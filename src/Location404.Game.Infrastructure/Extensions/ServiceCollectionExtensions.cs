@@ -39,7 +39,6 @@ public static class ServiceCollectionExtensions
 
         if (redisSettings.Enabled)
         {
-            // Use real Redis implementations
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
                 var logger = sp.GetRequiredService<ILogger<IConnectionMultiplexer>>();
@@ -55,7 +54,6 @@ public static class ServiceCollectionExtensions
                     configurationOptions.ConnectRetry = 3;
                     configurationOptions.KeepAlive = 60;
 
-                    // Dragonfly compatibility settings
                     configurationOptions.AllowAdmin = false;
                     configurationOptions.DefaultDatabase = 0;
 

@@ -55,30 +55,11 @@ public class GameRound
             return 0;
 
         var distanceKm = GameResponse.CalculateDistance(playerGuess);
-
-        // GeoGuessr-style exponential decay scoring
-        // Formula: score = 5000 * e^(-distance / scaleFactor)
-        //
-        // Scale factor controls how quickly points decay with distance:
-        // - Smaller scale = steeper decay (harder scoring)
-        // - Larger scale = gentler decay (easier scoring)
-        //
-        // With scaleFactor = 2000:
-        // - 0 km      → 5000 points (perfect!)
-        // - 100 km    → ~4756 points (excellent)
-        // - 500 km    → ~3894 points (very good)
-        // - 1000 km   → ~3033 points (good)
-        // - 2000 km   → ~1839 points (decent)
-        // - 5000 km   → ~410 points (far)
-        // - 10000 km  → ~34 points (very far)
-        // - 20000 km  → ~0 points (opposite side of Earth)
-
         const double maxScore = 5000.0;
-        const double scaleFactor = 2000.0; // Controls decay rate
+        const double scaleFactor = 2000.0;
 
         var score = maxScore * Math.Exp(-distanceKm / scaleFactor);
 
-        // Round to nearest integer and ensure minimum score of 0
         return Math.Max(0, (int)Math.Round(score));
     }
 

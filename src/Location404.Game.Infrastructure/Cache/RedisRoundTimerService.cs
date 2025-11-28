@@ -5,9 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
-using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Features.GameRounds.Interfaces;
-using Location404.Game.Application.Features.Matchmaking.Interfaces;
 
 public class RedisRoundTimerService : IRoundTimerService
 {

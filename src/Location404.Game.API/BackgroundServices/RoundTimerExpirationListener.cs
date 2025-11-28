@@ -1,7 +1,6 @@
 namespace Location404.Game.API.BackgroundServices;
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
@@ -10,14 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using Microsoft.AspNetCore.SignalR;
 using Location404.Game.API.Hubs;
-using Location404.Game.Application.Common.Interfaces;
 using Location404.Game.Application.Features.GameRounds.Interfaces;
-using Location404.Game.Application.Features.Matchmaking.Interfaces;
 using Location404.Game.Application.Features.GameRounds;
-using Location404.Game.Application.Features.GameRounds.Commands.SubmitGuessCommand;
 using Location404.Game.Application.Features.GameRounds.Commands.EndRoundCommand;
-using Location404.Game.Application.Features.GameRounds.Commands.StartRoundCommand;
-using Location404.Game.Application.Features.Matchmaking.Commands.JoinMatchmakingCommand;
 using Location404.Game.Application.Common.Result;
 using LiteBus.Commands.Abstractions;
 
@@ -58,38 +52,38 @@ public class RoundTimerExpirationListener : BackgroundService
                     var parts = key.Split(':');
                     if (parts.Length != 4)
                     {
-                        _logger.LogWarning("⏱️ [TimerExpiration] Invalid key format: {Key}", key);
+                        _logger.LogWarning("[TimerExpiration] Invalid key format: {Key}", key);
                         return;
                     }
 
                     if (!Guid.TryParse(parts[2], out var matchId) || !Guid.TryParse(parts[3], out var roundId))
                     {
-                        _logger.LogWarning("⏱️ [TimerExpiration] Failed to parse GUIDs from key: {Key}", key);
+                        _logger.LogWarning("[TimerExpiration] Failed to parse GUIDs from key: {Key}", key);
                         return;
                     }
 
-                    _logger.LogWarning("⏱️ [TimerExpiration] Timer expired for match {MatchId}, round {RoundId}. Processing auto-submit...",
+                    _logger.LogWarning("[TimerExpiration] Timer expired for match {MatchId}, round {RoundId}. Processing auto-submit...",
                         matchId, roundId);
 
                     await ProcessTimerExpiration(matchId, roundId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "⏱️ [TimerExpiration] Error processing expired key: {Key}", expiredKey);
+                    _logger.LogError(ex, "[TimerExpiration] Error processing expired key: {Key}", expiredKey);
                 }
             });
 
-            _logger.LogInformation("⏱️ [TimerExpiration] Listening for Redis keyspace notifications on __keyevent@0__:expired");
+            _logger.LogInformation("[TimerExpiration] Listening for Redis keyspace notifications on __keyevent@0__:expired");
 
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("⏱️ [TimerExpiration] Listener stopped");
+            _logger.LogInformation("[TimerExpiration] Listener stopped");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "⏱️ [TimerExpiration] Fatal error in listener");
+            _logger.LogError(ex, "[TimerExpiration] Fatal error in listener");
         }
     }
 
@@ -108,13 +102,13 @@ public class RoundTimerExpirationListener : BackgroundService
 
             if (match == null)
             {
-                _logger.LogWarning("⏱️ [ForceRoundEnd] Match {MatchId} not found", matchId);
+                _logger.LogWarning("[ForceRoundEnd] Match {MatchId} not found", matchId);
                 return;
             }
 
             if (match.CurrentGameRound == null || match.CurrentGameRound.Id != roundId)
             {
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Round {RoundId} already ended for match {MatchId}", roundId, matchId);
+                _logger.LogInformation("[ForceRoundEnd] Round {RoundId} already ended for match {MatchId}", roundId, matchId);
                 return;
             }
 
@@ -127,7 +121,7 @@ public class RoundTimerExpirationListener : BackgroundService
 
             if (playerAGuess != null && playerBGuess != null)
             {
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Both players submitted for match {MatchId}, round {RoundId}. Skipping force end.", matchId, roundId);
+                _logger.LogInformation("[ForceRoundEnd] Both players submitted for match {MatchId}, round {RoundId}. Skipping force end.", matchId, roundId);
                 return;
             }
 
@@ -135,11 +129,11 @@ public class RoundTimerExpirationListener : BackgroundService
 
             if (gameResponse == null)
             {
-                _logger.LogError("⏱️ [ForceRoundEnd] Correct answer not found for match {MatchId}, round {RoundId}", matchId, roundId);
+                _logger.LogError("[ForceRoundEnd] Correct answer not found for match {MatchId}, round {RoundId}", matchId, roundId);
                 return;
             }
 
-            _logger.LogInformation("⏱️ [ForceRoundEnd] Ending round with null guesses - PlayerA: {PlayerANull}, PlayerB: {PlayerBNull}",
+            _logger.LogInformation("[ForceRoundEnd] Ending round with null guesses - PlayerA: {PlayerANull}, PlayerB: {PlayerBNull}",
                 playerAGuess == null ? "NULL" : "SUBMITTED",
                 playerBGuess == null ? "NULL" : "SUBMITTED");
 
@@ -154,7 +148,7 @@ public class RoundTimerExpirationListener : BackgroundService
 
             if (result.IsFailure)
             {
-                _logger.LogError("⏱️ [ForceRoundEnd] Failed to end round: {Error}", result.Error.Message);
+                _logger.LogError("[ForceRoundEnd] Failed to end round: {Error}", result.Error.Message);
                 return;
             }
 
@@ -163,7 +157,7 @@ public class RoundTimerExpirationListener : BackgroundService
                 var roundEndedResponse = RoundEndedResponse.FromRoundEndResult(result.Value.RoundResult);
                 await hubContext.Clients.Group(matchId.ToString()).SendAsync("RoundEnded", roundEndedResponse);
 
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
+                _logger.LogInformation("[ForceRoundEnd] Round {RoundNumber} ended for match {MatchId}. PlayerA: {PlayerAPoints}, PlayerB: {PlayerBPoints}",
                     result.Value.RoundResult.RoundNumber, matchId,
                     result.Value.RoundResult.PlayerATotalPoints,
                     result.Value.RoundResult.PlayerBTotalPoints);
@@ -174,13 +168,13 @@ public class RoundTimerExpirationListener : BackgroundService
                 var matchEndedResponse = MatchEndedResponse.FromMatchEndResult(result.Value.MatchResult);
                 await hubContext.Clients.Group(matchId.ToString()).SendAsync("MatchEnded", matchEndedResponse);
 
-                _logger.LogInformation("⏱️ [ForceRoundEnd] Match {MatchId} ended. Winner: {WinnerId}",
+                _logger.LogInformation("[ForceRoundEnd] Match {MatchId} ended. Winner: {WinnerId}",
                     matchId, result.Value.MatchResult.WinnerId);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "⏱️ [ForceRoundEnd] Error force-ending round for match {MatchId}, round {RoundId}", matchId, roundId);
+            _logger.LogError(ex, "[ForceRoundEnd] Error force-ending round for match {MatchId}, round {RoundId}", matchId, roundId);
         }
     }
 
@@ -189,7 +183,7 @@ public class RoundTimerExpirationListener : BackgroundService
         if (_subscriber != null)
         {
             await _subscriber.UnsubscribeAllAsync();
-            _logger.LogInformation("⏱️ [TimerExpiration] Unsubscribed from Redis keyspace notifications");
+            _logger.LogInformation("[TimerExpiration] Unsubscribed from Redis keyspace notifications");
         }
 
         await base.StopAsync(cancellationToken);
